@@ -21,11 +21,11 @@ body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--tx);disp
 .logo-t{font-size:20px;font-weight:700;color:var(--or);letter-spacing:-.5px}
 .logo-s{font-size:11px;color:var(--sb-m);margin-top:2px}
 .nav{flex:1;padding:12px 8px;overflow-y:auto}
-.ni{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;color:var(--sb-m);font-size:13px;margin-bottom:2px;transition:all .15s;border:none;background:none;width:100%;text-align:left}
-.ni:hover{background:rgba(255,255,255,.06);color:var(--sb-t)}
-.ni.active{background:rgba(232,101,10,.18);color:var(--or)}
+.ni{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;color:#fff;font-size:13px;margin-bottom:2px;transition:all .15s;border:none;background:none;width:100%;text-align:left}
+.ni:hover{background:rgba(255,255,255,.1);color:#fff}
+.ni.active{background:rgba(232,101,10,.25);color:var(--or)}
 .ni i{font-size:18px;width:20px}
-.ns{font-size:10px;color:var(--sb-m);text-transform:uppercase;letter-spacing:1px;padding:12px 12px 6px}
+.ns{font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;padding:12px 12px 6px}
 .main{margin-left:var(--sw);flex:1;padding:28px;overflow-y:auto;min-height:100vh;background:var(--bg)}
 .page{display:none}.page.active{display:block}
 .ph{margin-bottom:24px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px}
@@ -125,7 +125,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--or)}
 <body>
 
 <nav class="sb">
-  <div class="logo"><div class="logo-t">ShotIQ</div><div class="logo-s">Shooting Practice Trainer</div></div>
+  <div class="logo"><div class="logo-t">HoopIQ</div><div class="logo-s">Basketball Practice Planner</div></div>
   <div class="nav">
     <div class="ns">Main</div>
     <button class="ni active" onclick="go('dash')"><i class="ti ti-layout-dashboard"></i>Dashboard</button>
@@ -343,7 +343,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--or)}
         <th style="padding:8px 0;font-weight:500">Date</th><th style="padding:8px 0;font-weight:500">Session</th>
         <th style="padding:8px 0;font-weight:500">Player</th><th style="padding:8px 0;font-weight:500">Makes</th>
         <th style="padding:8px 0;font-weight:500">Att</th><th style="padding:8px 0;font-weight:500">%</th>
-        <th style="padding:8px 0;font-weight:500">Category</th><th style="padding:8px 0;font-weight:500"></th>
+        <th style="padding:8px 0;font-weight:500">Category</th><th style="padding:8px 0;font-weight:500">Result</th><th style="padding:8px 0;font-weight:500"></th>
       </tr></thead>
       <tbody id="sess-log"></tbody>
     </table>
@@ -377,6 +377,13 @@ input:focus,select:focus,textarea:focus{border-color:var(--or)}
         <button class="btn btn-g btn-sm" onclick="addMake()"><i class="ti ti-circle-check" style="color:var(--gr)"></i>Make</button>
         <button class="btn btn-g btn-sm" onclick="addMiss()"><i class="ti ti-circle-x" style="color:var(--re)"></i>Miss</button>
         <button class="btn btn-g btn-sm" onclick="addSet()"><i class="ti ti-refresh"></i>Set done</button>
+      </div>
+      <hr class="div">
+      <div style="font-size:11px;color:var(--mu);margin-bottom:10px;text-align:center;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Game / Scrimmage result</div>
+      <div style="display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-g btn-sm" id="t-win-btn" onclick="recordResult('win')" style="border-color:#BBF7D0;color:var(--gr)"><i class="ti ti-trophy"></i>Win</button>
+        <button class="btn btn-g btn-sm" id="t-loss-btn" onclick="recordResult('loss')" style="border-color:#FECACA;color:var(--re)"><i class="ti ti-x"></i>Loss</button>
+        <span id="t-result-display" style="font-size:13px;color:var(--mu)">Not recorded</span>
       </div>
     </div>
     <div>
@@ -521,7 +528,15 @@ input:focus,select:focus,textarea:focus{border-color:var(--or)}
     <div class="fg"><label class="fl">Makes</label><input type="number" id="ls-makes" placeholder="0" min="0"></div>
     <div class="fg"><label class="fl">Attempts</label><input type="number" id="ls-att" placeholder="0" min="0"></div>
   </div>
-  <div class="fg"><label class="fl">Category</label><select id="ls-cat"><option>Form Shooting</option><option>Mid-Range</option><option>3-Point</option><option>Free Throw</option><option>Off-Dribble</option><option>Catch & Shoot</option><option>Post Shooting</option></select></div>
+  <div class="fg"><label class="fl">Category</label><select id="ls-cat"><option>Form Shooting</option><option>Mid-Range</option><option>3-Point</option><option>Free Throw</option><option>Off-Dribble</option><option>Catch & Shoot</option><option>Post Shooting</option><option>Game / Scrimmage</option></select></div>
+  <div class="fg"><label class="fl">Result (optional)</label>
+    <div style="display:flex;gap:8px">
+      <button type="button" id="ls-win-btn" class="btn btn-g btn-sm" onclick="setResultModal('win')" style="flex:1;justify-content:center;border-color:#BBF7D0;color:var(--gr)"><i class="ti ti-trophy"></i>Win</button>
+      <button type="button" id="ls-loss-btn" class="btn btn-g btn-sm" onclick="setResultModal('loss')" style="flex:1;justify-content:center;border-color:#FECACA;color:var(--re)"><i class="ti ti-x"></i>Loss</button>
+      <button type="button" id="ls-none-btn" class="btn btn-g btn-sm" onclick="setResultModal('')" style="flex:1;justify-content:center" title="Clear result">—</button>
+    </div>
+    <input type="hidden" id="ls-result" value="">
+  </div>
   <div style="display:flex;gap:10px;justify-content:flex-end">
     <button class="btn btn-g" onclick="closeModal('addStatModal')">Cancel</button>
     <button class="btn btn-p" onclick="logSession()"><i class="ti ti-check"></i>Log</button>
@@ -916,8 +931,9 @@ function renderProgress(){
   const pcts=sessions.map(s=>s.att?Math.round(s.makes/s.att*100):0).reverse();
   const maxP=Math.max(...pcts,1);
   document.getElementById('prog-trend').innerHTML=`<div class="chart-area"><div class="cbar-wrap">${pcts.map((p,i)=>`<div style="display:flex;flex-direction:column;flex:1"><div class="cbar" style="height:${Math.round(p/maxP*100)}%;background:var(--bl);opacity:.8" data-tip="${sessions[sessions.length-1-i]?.name}: ${p}%"></div><div class="cbar-label">${p}%</div></div>`).join('')}</div></div>`;
-  document.getElementById('sess-log').innerHTML=sessions.map((s,i)=>`
-    <tr style="border-top:1px solid var(--bd);font-size:12px">
+  document.getElementById('sess-log').innerHTML=sessions.map((s,i)=>{
+    const resultBadge=s.result==='win'?`<span class="badge b-gr">Win</span>`:s.result==='loss'?`<span class="badge b-re">Loss</span>`:'';
+    return`<tr style="border-top:1px solid var(--bd);font-size:12px">
       <td style="padding:10px 4px 10px 0;color:var(--mu)">${s.date}</td>
       <td style="padding:10px 4px">${s.name}</td>
       <td style="padding:10px 4px;color:var(--mu)">${s.player||'—'}</td>
@@ -925,26 +941,46 @@ function renderProgress(){
       <td style="padding:10px 4px"><span contenteditable="true" onblur="editSess(${i},'att',this.textContent)">${s.att}</span></td>
       <td style="padding:10px 4px;font-weight:600;color:var(--or)">${s.att?Math.round(s.makes/s.att*100):0}%</td>
       <td style="padding:10px 4px"><span class="badge b-mu">${s.cat}</span></td>
+      <td style="padding:10px 4px">${resultBadge}</td>
       <td style="padding:10px 4px"><button class="btn-ic" onclick="deleteSess(${i})"><i class="ti ti-trash"></i></button></td>
-    </tr>`).join('');
+    </tr>`;}).join('');
 }
 function editSess(i,f,v){const n=parseInt(v);if(!isNaN(n)){sessions[i][f]=n;renderProgress();}}
 function deleteSess(i){if(confirm('Delete session?')){sessions.splice(i,1);renderProgress();}}
+function setResultModal(r){
+  document.getElementById('ls-result').value=r;
+  const wb=document.getElementById('ls-win-btn'),lb=document.getElementById('ls-loss-btn'),nb=document.getElementById('ls-none-btn');
+  wb.style.background=r==='win'?'#DCFCE7':''; wb.style.fontWeight=r==='win'?'700':'500';
+  lb.style.background=r==='loss'?'#FEE2E2':''; lb.style.fontWeight=r==='loss'?'700':'500';
+  nb.style.background=!r?'var(--sur2)':'';
+}
 function logSession(){
   const name=document.getElementById('ls-name').value.trim();if(!name)return alert('Enter a session name.');
   const pid=parseInt(document.getElementById('ls-player').value)||null;
   const pname=pid?players.find(x=>x.id===pid)?.name||'':'';
   const makes=parseInt(document.getElementById('ls-makes').value)||0,att=parseInt(document.getElementById('ls-att').value)||0,cat=document.getElementById('ls-cat').value;
+  const result=document.getElementById('ls-result').value||'';
   const now=new Date(),dateStr=`${now.toLocaleString('default',{month:'short'})} ${now.getDate()}, ${now.getFullYear()}`;
-  const s={date:dateStr,name,player:pname,makes,att,cat};
+  const s={date:dateStr,name,player:pname,makes,att,cat,result};
   sessions.unshift(s);
-  if(pid){const p=players.find(x=>x.id===pid);if(p)p.sessions.unshift({date:dateStr,name,makes,att,cat});}
+  if(pid){const p=players.find(x=>x.id===pid);if(p)p.sessions.unshift({date:dateStr,name,makes,att,cat,result});}
   closeModal('addStatModal');['ls-name','ls-makes','ls-att'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ls-result').value='';setResultModal('');
   renderProgress();
 }
 
 // ==================== TIMER ====================
-let tSec=30,tTotal=0,tRunning=false,tInterval=null,tMakes=0,tAtt=0,tSets=0,tRestInt=null,tRestRunning=false;
+let tSec=30,tTotal=0,tRunning=false,tInterval=null,tMakes=0,tAtt=0,tSets=0,tRestInt=null,tRestRunning=false,tResult='';
+function recordResult(r){
+  tResult=tResult===r?'':r;
+  const wd=document.getElementById('t-win-btn'),ld=document.getElementById('t-loss-btn'),disp=document.getElementById('t-result-display');
+  wd.style.background=tResult==='win'?'#DCFCE7':'';
+  wd.style.fontWeight=tResult==='win'?'700':'500';
+  ld.style.background=tResult==='loss'?'#FEE2E2':'';
+  ld.style.fontWeight=tResult==='loss'?'700':'500';
+  disp.textContent=tResult==='win'?'✅ Win recorded':tResult==='loss'?'❌ Loss recorded':'Not recorded';
+  disp.style.color=tResult==='win'?'var(--gr)':tResult==='loss'?'var(--re)':'var(--mu)';
+}
 function dispTimer(){const m=Math.floor(tSec/60),s=tSec%60;document.getElementById('t-display').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');}
 function toggleTimer(){
   if(tRestRunning)return;
