@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HoopIQ – Basketball Practice Planner</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --or:#E8650A;--or-dk:#B84E05;--or-lt:#FEF3EC;
+  --sb:#1A1A2E;--bg:#F5F6FA;--sur:#FFF;--sur2:#F0F2F8;
+  --tx:#1A1A2E;--mu:#6B7494;--bd:#E2E5EF;
+  --gr:#16A34A;--bl:#2563EB;--pu:#7C3AED;--re:#DC2626;--am:#D97706;
+  --sw:220px;
+}
+body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--tx);display:flex;min-height:100vh;font-size:14px}
+.sb{width:var(--sw);background:var(--sb);border-right:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100}
+.logo{padding:20px 16px;border-bottom:1px solid rgba(255,255,255,.06)}
+.logo-t{font-size:20px;font-weight:700;color:var(--or);letter-spacing:-.5px}
+.logo-s{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px}
+.nav{flex:1;padding:12px 8px;overflow-y:auto}
+.ni{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;color:#fff;font-size:13px;margin-bottom:2px;transition:all .15s;border:none;background:none;width:100%;text-align:left}
+.ni:hover{background:rgba(255,255,255,.1)}
+.ni.active{background:rgba(232,101,10,.25);color:var(--or)}
+.ni i{font-size:18px;width:20px}
+.ns{font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px;padding:12px 12px 6px}
+/* Save status bar */
+.save-bar{position:fixed;bottom:0;left:var(--sw);right:0;background:var(--sur);border-top:1px solid var(--bd);padding:8px 24px;display:flex;align-items:center;gap:12px;z-index:90;font-size:12px}
+.save-status{display:flex;align-items:center;gap:6px;color:var(--mu)}
+.save-dot{width:8px;height:8px;border-radius:50%;background:var(--mu);flex-shrink:0;transition:background .3s}
+.save-dot.saving{background:var(--am);animation:pulse .8s infinite}
+.save-dot.saved{background:var(--gr)}
+.save-dot.error{background:var(--re)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.main{margin-left:var(--sw);flex:1;padding:28px;padding-bottom:56px;overflow-y:auto;min-height:100vh;background:var(--bg)}
+.page{display:none}.page.active{display:block}
+.ph{margin-bottom:24px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px}
+.pt{font-size:22px;font-weight:700}.ps{color:var(--mu);font-size:13px;margin-top:4px}
+.card{background:var(--sur);border:1px solid var(--bd);border-radius:12px;padding:18px}
+.card2{background:var(--sur2);border:1px solid var(--bd);border-radius:10px;padding:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.stat{background:var(--sur);border:1px solid var(--bd);border-radius:10px;padding:16px}
+.sl{font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px}
+.sv{font-size:28px;font-weight:700;margin-top:4px}
+.sc{font-size:11px;margin-top:2px}
+.badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+.b-or{background:#FEF3EC;color:#B84E05}.b-gr{background:#DCFCE7;color:#15803D}
+.b-bl{background:#DBEAFE;color:#1D4ED8}.b-pu{background:#EDE9FE;color:#6D28D9}
+.b-re{background:#FEE2E2;color:#B91C1C}.b-mu{background:var(--sur2);color:var(--mu);border:1px solid var(--bd)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s}
+.btn-p{background:var(--or);color:#fff}.btn-p:hover{background:var(--or-dk)}
+.btn-g{background:transparent;color:var(--mu);border:1px solid var(--bd)}.btn-g:hover{background:var(--sur2);color:var(--tx)}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-ic{padding:6px;border-radius:6px;background:transparent;border:1px solid var(--bd);color:var(--mu);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s}
+.btn-ic:hover{background:var(--sur2);color:var(--tx)}
+input[type=text],input[type=number],input[type=date],select,textarea{background:var(--sur);border:1px solid var(--bd);border-radius:8px;color:var(--tx);padding:8px 12px;font-size:13px;width:100%;outline:none;font-family:inherit}
+input:focus,select:focus,textarea:focus{border-color:var(--or)}
+.fl{font-size:12px;color:var(--mu);margin-bottom:5px;display:block;font-weight:500}
+.fg{margin-bottom:12px}
+.pb{background:var(--sur2);border-radius:20px;height:7px;overflow:hidden;border:1px solid var(--bd)}
+.pf{height:100%;border-radius:20px;background:var(--or);transition:width .4s}
+.pf.gr{background:var(--gr)}.pf.bl{background:var(--bl)}.pf.pu{background:var(--pu)}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:2px 8px;border-radius:20px;border:1px solid;user-select:none}
+.tag-or{border-color:#FCD9BD;color:#B84E05;background:#FEF3EC}
+.tag-bl{border-color:#BFDBFE;color:#1D4ED8;background:#EFF6FF}
+.tag-gr{border-color:#BBF7D0;color:#15803D;background:#F0FDF4}
+.tag-mu{border-color:var(--bd);color:var(--mu);background:var(--sur2)}
+.tabs{display:flex;gap:4px;background:var(--sur2);border-radius:10px;padding:4px;border:1px solid var(--bd);margin-bottom:20px}
+.tab{flex:1;padding:8px;text-align:center;border-radius:7px;cursor:pointer;font-size:13px;color:var(--mu);border:none;background:none;transition:all .15s}
+.tab.active{background:var(--sur);color:var(--tx);font-weight:500;box-shadow:0 1px 4px rgba(0,0,0,.08);border:1px solid var(--bd)}
+.sl2{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--mu);margin-bottom:10px;margin-top:18px}
+.div{border:none;border-top:1px solid var(--bd);margin:16px 0}
+.dc{background:var(--sur);border:1px solid var(--bd);border-radius:12px;padding:16px;transition:border-color .15s,box-shadow .15s}
+.dc:hover{border-color:rgba(232,101,10,.4);box-shadow:0 2px 12px rgba(232,101,10,.07)}
+.mb{display:none;position:fixed;inset:0;background:rgba(26,26,46,.45);z-index:200;align-items:center;justify-content:center}
+.mb.open{display:flex}
+.mo{background:var(--sur);border:1px solid var(--bd);border-radius:16px;padding:26px;width:520px;max-width:95vw;box-shadow:0 8px 40px rgba(0,0,0,.12);max-height:90vh;overflow-y:auto}
+.mt{font-size:16px;font-weight:600;margin-bottom:16px}
+.sn{background:var(--sur);border:1.5px solid var(--bd);border-radius:10px;padding:10px;text-align:center;transition:all .15s;cursor:pointer}
+.sn:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.sn.sn-m{border-color:#16A34A;background:#F0FDF4}
+.sn.sn-p{border-color:var(--or);background:var(--or-lt)}
+.sn.sn-b{border-color:var(--bl);background:#EFF6FF}
+.sn.sn-l{opacity:.4}
+.si{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--sur2);border-radius:8px;margin-bottom:6px;border:1px solid var(--bd)}
+.si-time{font-size:12px;color:var(--or);font-weight:600;min-width:32px}
+.qa{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--sur);border-radius:10px;cursor:pointer;border:1px solid var(--bd);transition:all .15s}
+.qa:hover{border-color:rgba(232,101,10,.35);box-shadow:0 1px 8px rgba(232,101,10,.06)}
+.qa-i{width:36px;height:36px;border-radius:8px;background:var(--or-lt);display:flex;align-items:center;justify-content:center;color:var(--or);font-size:18px}
+.timer-big{font-size:68px;font-weight:700;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:-2px;color:var(--or)}
+.timer-lbl{text-align:center;color:var(--mu);font-size:13px;margin-top:4px}
+.pill-nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.pill{padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid var(--bd);background:var(--sur);color:var(--mu);transition:all .15s}
+.pill.active{background:var(--or);color:#fff;border-color:var(--or)}
+.cbar-wrap{display:flex;align-items:flex-end;gap:8px;height:120px;padding-top:10px}
+.cbar{flex:1;border-radius:6px 6px 0 0;min-width:24px;cursor:pointer;position:relative}
+.cbar:hover::after{content:attr(data-tip);position:absolute;top:-28px;left:50%;transform:translateX(-50%);background:var(--tx);color:#fff;font-size:10px;padding:3px 7px;border-radius:4px;white-space:nowrap}
+.cbar-label{font-size:10px;text-align:center;color:var(--mu);margin-top:4px}
+.chart-area{border-bottom:1px solid var(--bd);border-left:1px solid var(--bd)}
+.player-card{background:var(--sur);border:1px solid var(--bd);border-radius:14px;overflow:hidden;transition:box-shadow .15s,border-color .15s;cursor:pointer}
+.player-card:hover{border-color:rgba(232,101,10,.4);box-shadow:0 4px 16px rgba(232,101,10,.08)}
+.player-banner{height:64px;position:relative}
+.player-avatar{width:56px;height:56px;border-radius:50%;border:3px solid var(--sur);position:absolute;bottom:-22px;left:18px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff}
+.player-body{padding:30px 18px 18px}
+.player-name{font-size:15px;font-weight:700}
+.player-meta{font-size:12px;color:var(--mu);margin-top:2px}
+.player-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
+.p-stat{background:var(--sur2);border-radius:8px;padding:8px;text-align:center}
+.p-stat-v{font-size:18px;font-weight:700}
+.p-stat-l{font-size:10px;color:var(--mu);margin-top:1px}
+.profile-header{background:var(--sur);border:1px solid var(--bd);border-radius:14px;overflow:hidden;margin-bottom:20px}
+.profile-banner{height:100px;position:relative}
+.profile-avatar{width:80px;height:80px;border-radius:50%;border:4px solid var(--sur);position:absolute;bottom:-30px;left:24px;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#fff}
+.profile-info{padding:40px 24px 20px}
+.profile-name{font-size:20px;font-weight:700}
+.profile-sub{font-size:13px;color:var(--mu);margin-top:3px}
+.skill-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid}
+.cat-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--sur2);border-radius:8px;margin-bottom:6px;border:1px solid var(--bd)}
+.cat-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+/* loading overlay */
+#loading-overlay{position:fixed;inset:0;background:var(--sb);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:14px;color:#fff;font-size:15px}
+#loading-overlay .spin{width:36px;height:36px;border:3px solid rgba(255,255,255,.2);border-top-color:var(--or);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media print{.sb,.ph button,.btn,.btn-ic,.save-bar{display:none!important}.main{margin-left:0;padding:16px}.page{display:block!important}body{background:#fff}}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bd);border-radius:4px}
+</style>
+</head>
+<body>
+
+<div id="loading-overlay"><div class="spin"></div><span>Loading HoopIQ…</span></div>
+
+<nav class="sb">
+  <div class="logo"><div class="logo-t">HoopIQ</div><div class="logo-s">Basketball Practice Planner</div></div>
+  <div class="nav">
+    <div class="ns">Main</div>
+    <button class="ni active" onclick="go('dash')"><i class="ti ti-layout-dashboard"></i>Dashboard</button>
+    <button class="ni" onclick="go('players')"><i class="ti ti-users"></i>Player Profiles</button>
+    <button class="ni" onclick="go('drills')"><i class="ti ti-database"></i>Drill Library</button>
+    <button class="ni" onclick="go('plans')"><i class="ti ti-calendar-event"></i>Practice Plans</button>
+    <div class="ns">Develop</div>
+    <button class="ni" onclick="go('skillmap')"><i class="ti ti-topology-star"></i>Skill Map</button>
+    <button class="ni" onclick="go('progress')"><i class="ti ti-chart-bar"></i>Progress</button>
+    <div class="ns">Settings</div>
+    <button class="ni" onclick="go('categories')"><i class="ti ti-tag"></i>Categories</button>
+    <button class="ni" onclick="go('timer')"><i class="ti ti-player-play"></i>Timer</button>
+  </div>
+</nav>
+
+<main class="main">
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dash">
+  <div class="ph">
+    <div><div class="pt">Good morning, Coach 🏀</div><div class="ps">Today's focus: Shooting Fundamentals</div></div>
+    <button class="btn btn-p" onclick="go('timer')"><i class="ti ti-player-play"></i>Start session</button>
+  </div>
+  <div class="grid4" style="margin-bottom:20px">
+    <div class="stat"><div class="sl">Sessions</div><div class="sv" style="color:var(--or)" id="dash-sess-count">0</div><div class="sc" style="color:var(--mu)">total logged</div></div>
+    <div class="stat"><div class="sl">Players</div><div class="sv" style="color:var(--bl)" id="dash-player-count">0</div><div class="sc" style="color:var(--mu)">in roster</div></div>
+    <div class="stat"><div class="sl">Categories</div><div class="sv" style="color:var(--pu)" id="dash-cat-count">0</div><div class="sc" style="color:var(--mu)">active</div></div>
+    <div class="stat"><div class="sl">W / L</div><div class="sv" id="dash-wl">—</div><div class="sc" style="color:var(--mu)">record</div></div>
+  </div>
+  <div class="grid2">
+    <div>
+      <div class="sl2">Today's practice plan</div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <span style="font-weight:600">Form Shooting Focus — 50 min</span>
+          <button class="btn btn-p btn-sm" onclick="go('timer')"><i class="ti ti-player-play"></i>Start</button>
+        </div>
+        <div class="si"><span class="si-time">10m</span><span>Warm-up form shots</span><span class="badge b-bl" style="margin-left:auto">Beginner</span></div>
+        <div class="si"><span class="si-time">10m</span><span>Mid-range pull-ups</span><span class="badge b-or" style="margin-left:auto">Intermediate</span></div>
+        <div class="si"><span class="si-time">10m</span><span>Corner 3s</span><span class="badge b-or" style="margin-left:auto">Intermediate</span></div>
+        <div class="si"><span class="si-time">10m</span><span>Off-dribble shooting</span><span class="badge b-re" style="margin-left:auto">Advanced</span></div>
+        <div class="si"><span class="si-time">10m</span><span>Free throw challenge</span><span class="badge b-bl" style="margin-left:auto">Beginner</span></div>
+      </div>
+      <div class="sl2">Top players this week</div>
+      <div class="card" id="dash-top-players"></div>
+    </div>
+    <div>
+      <div class="sl2">Quick actions</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="qa" onclick="go('players')"><div class="qa-i"><i class="ti ti-user-plus"></i></div><div><div style="font-weight:500;font-size:13px">Player profiles</div><div style="font-size:11px;color:var(--mu)">View & manage roster</div></div></div>
+        <div class="qa" onclick="go('drills')"><div class="qa-i"><i class="ti ti-plus"></i></div><div><div style="font-weight:500;font-size:13px">Add new drill</div><div style="font-size:11px;color:var(--mu)">Add to your library</div></div></div>
+        <div class="qa" onclick="go('categories')"><div class="qa-i"><i class="ti ti-tag"></i></div><div><div style="font-weight:500;font-size:13px">Manage categories</div><div style="font-size:11px;color:var(--mu)">Add, edit, or remove</div></div></div>
+        <div class="qa" onclick="go('progress')"><div class="qa-i"><i class="ti ti-chart-bar"></i></div><div><div style="font-weight:500;font-size:13px">Progress report</div><div style="font-size:11px;color:var(--mu)">View stats & charts</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PLAYER PROFILES LIST -->
+<div class="page" id="page-players">
+  <div class="ph">
+    <div><div class="pt">Player Profiles</div><div class="ps">Manage your roster and track individual development</div></div>
+    <button class="btn btn-p" onclick="openModal('addPlayerModal')"><i class="ti ti-user-plus"></i>Add player</button>
+  </div>
+  <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+    <div style="position:relative;flex:1;min-width:160px"><i class="ti ti-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--mu);font-size:16px"></i><input type="text" placeholder="Search players…" style="padding-left:34px" oninput="renderPlayers()"></div>
+    <select id="f-pos" onchange="renderPlayers()" style="width:auto;min-width:120px"><option value="">All positions</option><option>PG</option><option>SG</option><option>SF</option><option>PF</option><option>C</option></select>
+    <select id="f-grp" onchange="renderPlayers()" style="width:auto;min-width:130px"><option value="">All groups</option><option>Varsity</option><option>JV</option><option>Youth</option><option>Individual</option></select>
+  </div>
+  <div class="grid3" id="player-grid"></div>
+</div>
+
+<!-- PLAYER DETAIL -->
+<div class="page" id="page-profile">
+  <div class="ph">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="btn btn-g btn-sm" onclick="go('players')"><i class="ti ti-arrow-left"></i>Back</button>
+      <div><div class="pt" id="prof-title">Player</div><div class="ps" id="prof-sub"></div></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-g btn-sm" onclick="openEditPlayer()"><i class="ti ti-pencil"></i>Edit</button>
+      <button class="btn btn-g btn-sm" onclick="printProfile()"><i class="ti ti-printer"></i>Print PDF</button>
+      <button class="btn btn-p btn-sm" onclick="openModal('logPlayerSessionModal')"><i class="ti ti-plus"></i>Log session</button>
+    </div>
+  </div>
+  <div class="profile-header">
+    <div class="profile-banner" id="prof-banner"></div>
+    <div class="profile-info">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">
+        <div><div class="profile-name" id="prof-name"></div><div class="profile-sub" id="prof-meta"></div><div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px" id="prof-badges"></div></div>
+        <div style="text-align:right"><div style="font-size:11px;color:var(--mu)">Overall make %</div><div style="font-size:36px;font-weight:700;color:var(--or)" id="prof-pct">—</div></div>
+      </div>
+      <div id="prof-notes-wrap" style="margin-top:14px"></div>
+    </div>
+  </div>
+  <div class="grid4" style="margin-bottom:20px" id="prof-stats"></div>
+  <div class="tabs">
+    <button class="tab active" onclick="profileTab('skills')">Skill Progress</button>
+    <button class="tab" onclick="profileTab('sessions')">Session Log</button>
+    <button class="tab" onclick="profileTab('goals')">Goals</button>
+  </div>
+  <div id="prof-tab-skills"><div class="grid2"><div class="card"><div style="font-weight:600;margin-bottom:14px">Shooting categories</div><div id="prof-skill-bars"></div></div><div class="card"><div style="font-weight:600;margin-bottom:12px">Makes by category</div><div id="prof-chart"></div></div></div></div>
+  <div id="prof-tab-sessions" style="display:none"><div class="card"><table style="width:100%;border-collapse:collapse"><thead><tr style="color:var(--mu);font-size:12px;text-align:left"><th style="padding:8px 4px 8px 0;font-weight:500">Date</th><th style="padding:8px 4px;font-weight:500">Session</th><th style="padding:8px 4px;font-weight:500">Makes</th><th style="padding:8px 4px;font-weight:500">Att</th><th style="padding:8px 4px;font-weight:500">%</th><th style="padding:8px 4px;font-weight:500">Category</th></tr></thead><tbody id="prof-sess-log"></tbody></table></div></div>
+  <div id="prof-tab-goals" style="display:none"><div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><span style="font-weight:600">Player goals</span><button class="btn btn-g btn-sm" onclick="addGoal()"><i class="ti ti-plus"></i>Add goal</button></div><div id="prof-goals-list"></div></div></div>
+</div>
+
+<!-- DRILL LIBRARY -->
+<div class="page" id="page-drills">
+  <div class="ph">
+    <div><div class="pt">Drill Library</div><div class="ps">Browse, filter, and manage drills</div></div>
+    <button class="btn btn-p" onclick="openAddDrill()"><i class="ti ti-plus"></i>Add drill</button>
+  </div>
+  <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+    <div style="position:relative;flex:1;min-width:160px"><i class="ti ti-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--mu);font-size:16px"></i><input type="text" placeholder="Search drills…" style="padding-left:34px" oninput="renderDrills()"></div>
+    <select id="f-cat" onchange="renderDrills()" style="width:auto;min-width:140px"><option value="">All categories</option></select>
+    <select id="f-lvl" onchange="renderDrills()" style="width:auto;min-width:120px"><option value="">All levels</option><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select>
+  </div>
+  <div class="sl2" style="margin-top:4px">Filter by participants</div>
+  <div class="pill-nav" id="part-pills"></div>
+  <div class="grid3" id="drill-grid"></div>
+</div>
+
+<!-- PRACTICE PLANS -->
+<div class="page" id="page-plans">
+  <div class="ph"><div><div class="pt">Practice Plans</div><div class="ps">Build, manage, and export sessions</div></div></div>
+  <div class="grid2">
+    <div><div class="sl2">Pre-built plans</div><div style="display:flex;flex-direction:column;gap:10px" id="plan-list"></div></div>
+    <div>
+      <div class="sl2">Custom plan builder</div>
+      <div class="card">
+        <div class="fg"><label class="fl">Plan name</label><input type="text" id="plan-name" placeholder="e.g. Morning Shooting Workout" oninput="scheduleSave()"></div>
+        <div class="fg"><label class="fl">Total time (min)</label><input type="number" id="plan-time" placeholder="60" min="5" oninput="scheduleSave()"></div>
+        <div class="fg"><label class="fl">Assign to player</label><select id="plan-player" onchange="scheduleSave()"><option value="">— Team / unassigned —</option></select></div>
+        <div class="fg"><label class="fl">Focus category</label><select id="plan-cat" onchange="scheduleSave()"></select></div>
+        <div id="plan-sessions" style="margin:14px 0"></div>
+        <button class="btn btn-g btn-sm" style="width:100%;justify-content:center;margin-bottom:8px" onclick="addPlanDrill()"><i class="ti ti-plus"></i>Add drill</button>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button class="btn btn-p" style="flex:1;justify-content:center" onclick="savePlan()"><i class="ti ti-check"></i>Save</button>
+          <button class="btn btn-g" style="flex:1;justify-content:center" onclick="downloadPlanPDF()"><i class="ti ti-file-type-pdf"></i>Download PDF</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SKILL MAP -->
+<div class="page" id="page-skillmap">
+  <div class="ph">
+    <div><div class="pt">Skill Map</div><div class="ps">Track and edit shooting development</div></div>
+    <button class="btn btn-p" onclick="openModal('addSkillModal')"><i class="ti ti-plus"></i>Add skill</button>
+  </div>
+  <div style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap">
+    <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--gr);font-weight:500"><span style="width:10px;height:10px;border-radius:50%;background:var(--gr);display:inline-block"></span>Mastered</span>
+    <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--or);font-weight:500"><span style="width:10px;height:10px;border-radius:50%;background:var(--or);display:inline-block"></span>In progress</span>
+    <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--bl);font-weight:500"><span style="width:10px;height:10px;border-radius:50%;background:var(--bl);display:inline-block"></span>Started</span>
+    <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--mu);font-weight:500"><span style="width:10px;height:10px;border-radius:50%;background:var(--bd);display:inline-block"></span>Not started</span>
+  </div>
+  <div id="skill-map"></div>
+</div>
+
+<!-- PROGRESS -->
+<div class="page" id="page-progress">
+  <div class="ph">
+    <div><div class="pt">Progress Tracker</div><div class="ps">Stats and charts — click values to edit</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-g" onclick="downloadProgressPDF()"><i class="ti ti-file-type-pdf"></i>PDF</button>
+      <button class="btn btn-g" onclick="downloadProgressExcel()"><i class="ti ti-file-spreadsheet"></i>Excel</button>
+      <button class="btn btn-p" onclick="openModal('addStatModal')"><i class="ti ti-plus"></i>Log session</button>
+    </div>
+  </div>
+  <div class="grid4" style="margin-bottom:20px" id="prog-stats"></div>
+  <div class="grid2" style="margin-bottom:20px">
+    <div class="card"><div style="font-weight:600;margin-bottom:12px">Makes by category</div><div id="prog-chart"></div></div>
+    <div class="card"><div style="font-weight:600;margin-bottom:12px">Make % over time</div><div id="prog-trend"></div></div>
+  </div>
+  <div class="card" style="margin-bottom:20px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <span style="font-weight:600">Recent scores</span><span class="badge b-mu" id="wl-badge"></span>
+    </div>
+    <div id="scores-list"></div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <span style="font-weight:600">Session log</span><span style="font-size:12px;color:var(--mu)">Click a value to edit</span>
+    </div>
+    <table style="width:100%;border-collapse:collapse">
+      <thead><tr style="color:var(--mu);font-size:12px;text-align:left">
+        <th style="padding:8px 0;font-weight:500">Date</th><th style="padding:8px 0;font-weight:500">Session</th>
+        <th style="padding:8px 0;font-weight:500">Player</th><th style="padding:8px 0;font-weight:500">Makes</th>
+        <th style="padding:8px 0;font-weight:500">Att</th><th style="padding:8px 0;font-weight:500">%</th>
+        <th style="padding:8px 0;font-weight:500">Category</th><th style="padding:8px 0;font-weight:500">Result</th>
+        <th style="padding:8px 0;font-weight:500">Score</th><th style="padding:8px 0;font-weight:500"></th>
+      </tr></thead>
+      <tbody id="sess-log"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- CATEGORIES -->
+<div class="page" id="page-categories">
+  <div class="ph">
+    <div><div class="pt">Categories</div><div class="ps">Add, edit, and remove drill & session categories</div></div>
+    <button class="btn btn-p" onclick="openModal('addCatModal')"><i class="ti ti-plus"></i>Add category</button>
+  </div>
+  <div class="card" style="max-width:600px">
+    <div style="font-weight:600;margin-bottom:14px">Active categories</div>
+    <div id="cat-list"></div>
+  </div>
+</div>
+
+<!-- TIMER -->
+<div class="page" id="page-timer">
+  <div class="ph"><div><div class="pt">Timer & Rep Counter</div><div class="ps">Track your in-session shooting work</div></div></div>
+  <div class="grid2">
+    <div class="card" style="text-align:center;padding:32px 20px">
+      <div style="margin-bottom:14px"><select id="t-drill" style="width:auto;min-width:220px"><option>Form shots — 3×30s</option><option>Free throws — 10 reps</option><option>Corner 3s — 2×60s</option><option>Pull-up jumpers — 5 reps</option><option>Custom</option></select></div>
+      <div class="timer-big" id="t-display">00:30</div>
+      <div class="timer-lbl" id="t-status">Ready</div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:24px">
+        <button class="btn btn-g" onclick="resetTimer()"><i class="ti ti-refresh"></i>Reset</button>
+        <button class="btn btn-p" id="t-btn" onclick="toggleTimer()" style="min-width:110px;justify-content:center"><i class="ti ti-player-play"></i>Start</button>
+      </div>
+      <hr class="div">
+      <div style="display:flex;gap:20px;justify-content:center;flex-wrap:wrap">
+        <div><div style="font-size:11px;color:var(--mu)">Sets</div><div style="font-size:26px;font-weight:700;color:var(--bl)" id="t-sets">0</div></div>
+        <div><div style="font-size:11px;color:var(--mu)">Makes</div><div style="font-size:26px;font-weight:700;color:var(--gr)" id="t-makes">0</div></div>
+        <div><div style="font-size:11px;color:var(--mu)">Attempts</div><div style="font-size:26px;font-weight:700;color:var(--or)" id="t-attempts">0</div></div>
+        <div><div style="font-size:11px;color:var(--mu)">Make %</div><div style="font-size:26px;font-weight:700;color:var(--pu)" id="t-pct">—</div></div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:18px;flex-wrap:wrap">
+        <button class="btn btn-g btn-sm" onclick="addMake()"><i class="ti ti-circle-check" style="color:var(--gr)"></i>Make</button>
+        <button class="btn btn-g btn-sm" onclick="addMiss()"><i class="ti ti-circle-x" style="color:var(--re)"></i>Miss</button>
+        <button class="btn btn-g btn-sm" onclick="addSet()"><i class="ti ti-refresh"></i>Set done</button>
+      </div>
+      <hr class="div">
+      <div style="font-size:11px;color:var(--mu);margin-bottom:10px;text-align:center;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Game result</div>
+      <div style="display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-g btn-sm" id="t-win-btn" onclick="recordResult('win')" style="border-color:#BBF7D0;color:var(--gr)"><i class="ti ti-trophy"></i>Win</button>
+        <button class="btn btn-g btn-sm" id="t-loss-btn" onclick="recordResult('loss')" style="border-color:#FECACA;color:var(--re)"><i class="ti ti-x"></i>Loss</button>
+        <span id="t-result-display" style="font-size:13px;color:var(--mu)">Not recorded</span>
+      </div>
+    </div>
+    <div>
+      <div class="sl2">Timer settings</div>
+      <div class="card2" style="margin-bottom:14px">
+        <div class="fg"><label class="fl">Work duration (seconds)</label><input type="number" id="t-work" value="30" min="5" onchange="resetTimer()"></div>
+        <div class="fg"><label class="fl">Rest duration (seconds)</label><input type="number" id="t-rest" value="15" min="0"></div>
+        <div class="fg"><label class="fl">Target sets</label><input type="number" id="t-tsets" value="3" min="1"></div>
+        <div class="fg"><label class="fl">Assign to player</label><select id="t-player"><option value="">— Unassigned —</option></select></div>
+      </div>
+      <div class="sl2">Score</div>
+      <div class="card2" style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <div style="flex:1;text-align:center"><div style="font-size:11px;color:var(--mu);margin-bottom:4px;font-weight:500">Us</div><input type="number" id="t-score-us" placeholder="0" min="0" style="text-align:center;font-size:20px;font-weight:700;padding:8px 4px"></div>
+        <div style="font-size:22px;font-weight:700;color:var(--mu)">–</div>
+        <div style="flex:1;text-align:center"><div style="font-size:11px;color:var(--mu);margin-bottom:4px;font-weight:500">Them</div><input type="number" id="t-score-them" placeholder="0" min="0" style="text-align:center;font-size:20px;font-weight:700;padding:8px 4px"></div>
+      </div>
+      <div class="sl2">Session tags</div>
+      <div class="card2" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px" id="t-tags">
+        <span class="tag tag-or">Form</span><span class="tag tag-bl">Mid-Range</span><span class="tag tag-gr">Catch &amp; Shoot</span>
+        <button class="btn btn-g btn-sm" onclick="addTimerTag()"><i class="ti ti-plus"></i>Tag</button>
+      </div>
+      <div class="sl2">Rest phase</div>
+      <div class="card2" id="rest-display" style="text-align:center;font-size:13px;color:var(--mu)">Rest timer inactive</div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- Save bar -->
+<div class="save-bar">
+  <div class="save-status">
+    <div class="save-dot" id="save-dot"></div>
+    <span id="save-label">Loading…</span>
+  </div>
+  <button class="btn btn-g btn-sm" onclick="saveNow()" style="margin-left:auto"><i class="ti ti-device-floppy"></i>Save now</button>
+  <span id="last-saved" style="color:var(--mu);font-size:11px"></span>
+</div>
+
+<!-- ===== MODALS ===== -->
+<div class="mb" id="addCatModal"><div class="mo" style="width:400px">
+  <div class="mt" id="addCatTitle">Add category</div>
+  <input type="hidden" id="cat-edit-id">
+  <div class="fg"><label class="fl">Category name</label><input type="text" id="cat-name" placeholder="e.g. Mid-Range"></div>
+  <div class="fg"><label class="fl">Color</label><div style="display:flex;gap:8px;flex-wrap:wrap" id="cat-color-picker">
+    <div class="cat-col-opt" data-col="#E8650A" onclick="pickCatColor(this)" style="width:28px;height:28px;border-radius:50%;background:#E8650A;cursor:pointer;border:2px solid transparent"></div>
+    <div class="cat-col-opt" data-col="#2563EB" onclick="pickCatColor(this)" style="width:28px;height:28px;border-radius:50%;background:#2563EB;cursor:pointer;border:2px solid transparent"></div>
+    <div class="cat-col-opt" data-col="#16A34A" onclick="pickCatColor(this)" style="width:28px;height:28px;border-radius:50%;background:#16A34A;cursor:pointer;border:2px solid transparent"></div>
+    <div class="cat-col-opt" data-col="#7C3AED" onclick="pickCatColor(this)" style="width:28px;height:28px;border-radius:50%;background:#7C3AED;cursor:pointer;border:2px solid transparent"></div>
+    <div class="cat-col-opt" data-col="#DC2626" onclick="pickCatColor(this)" style="width:28px;height:28px;border-radius:50%;background:#DC2626;cursor:pointer;border:2px solid transparent"></div>
+    <div class="cat-col-opt" data-col="#D97706" onclick="pickCatColor(this)" style="width:28px;height:28px;border-radius:50%;background:#D97706;cursor:pointer;border:2px solid transparent"></div>
+    <div class="cat-col-opt" data-col="#0891B2" onclick="pickCatColor(this)" style="width:28px;height:28px;border-radius:50%;background:#0891B2;cursor:pointer;border:2px solid transparent"></div>
+    <div class="cat-col-opt" data-col="#1A1A2E" onclick="pickCatColor(this)" style="width:28px;height:28px;border-radius:50%;background:#1A1A2E;cursor:pointer;border:2px solid transparent"></div>
+  </div></div>
+  <div style="display:flex;gap:10px;justify-content:flex-end">
+    <button class="btn btn-g" onclick="closeModal('addCatModal')">Cancel</button>
+    <button class="btn btn-p" onclick="saveCat()"><i class="ti ti-check"></i>Save</button>
+  </div>
+</div></div>
+
+<div class="mb" id="addPlayerModal"><div class="mo">
+  <div class="mt" id="addPlayerTitle">Add player</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="fg" style="grid-column:1/-1"><label class="fl">Full name</label><input type="text" id="ap-name" placeholder="e.g. Marcus Johnson"></div>
+    <div class="fg"><label class="fl">Position</label><select id="ap-pos"><option>PG</option><option>SG</option><option>SF</option><option>PF</option><option>C</option></select></div>
+    <div class="fg"><label class="fl">Jersey #</label><input type="number" id="ap-num" placeholder="23" min="0" max="99"></div>
+    <div class="fg"><label class="fl">Group / team</label><select id="ap-grp"><option>Varsity</option><option>JV</option><option>Youth</option><option>Individual</option></select></div>
+    <div class="fg"><label class="fl">Dominant hand</label><select id="ap-hand"><option>Right</option><option>Left</option><option>Both</option></select></div>
+    <div class="fg"><label class="fl">Height</label><input type="text" id="ap-height" placeholder='6&apos;2"'></div>
+    <div class="fg"><label class="fl">Date of birth</label><input type="date" id="ap-dob"></div>
+  </div>
+  <div class="fg"><label class="fl">Profile color</label><div style="display:flex;gap:8px;flex-wrap:wrap" id="color-picker">
+    <div class="color-opt" data-col="#E8650A" onclick="pickColor(this)" style="width:28px;height:28px;border-radius:50%;background:#E8650A;cursor:pointer;border:2px solid transparent"></div>
+    <div class="color-opt" data-col="#2563EB" onclick="pickColor(this)" style="width:28px;height:28px;border-radius:50%;background:#2563EB;cursor:pointer;border:2px solid transparent"></div>
+    <div class="color-opt" data-col="#16A34A" onclick="pickColor(this)" style="width:28px;height:28px;border-radius:50%;background:#16A34A;cursor:pointer;border:2px solid transparent"></div>
+    <div class="color-opt" data-col="#7C3AED" onclick="pickColor(this)" style="width:28px;height:28px;border-radius:50%;background:#7C3AED;cursor:pointer;border:2px solid transparent"></div>
+    <div class="color-opt" data-col="#DC2626" onclick="pickColor(this)" style="width:28px;height:28px;border-radius:50%;background:#DC2626;cursor:pointer;border:2px solid transparent"></div>
+    <div class="color-opt" data-col="#0891B2" onclick="pickColor(this)" style="width:28px;height:28px;border-radius:50%;background:#0891B2;cursor:pointer;border:2px solid transparent"></div>
+    <div class="color-opt" data-col="#D97706" onclick="pickColor(this)" style="width:28px;height:28px;border-radius:50%;background:#D97706;cursor:pointer;border:2px solid transparent"></div>
+    <div class="color-opt" data-col="#1A1A2E" onclick="pickColor(this)" style="width:28px;height:28px;border-radius:50%;background:#1A1A2E;cursor:pointer;border:2px solid transparent"></div>
+  </div></div>
+  <div class="fg"><label class="fl">Strengths (comma separated)</label><input type="text" id="ap-str" placeholder="e.g. Free throws, Corner 3s"></div>
+  <div class="fg"><label class="fl">Areas to improve (comma separated)</label><input type="text" id="ap-imp" placeholder="e.g. Off-dribble, Post moves"></div>
+  <div class="fg"><label class="fl">Coach notes</label><textarea id="ap-notes" rows="2" placeholder="Any notes about this player…"></textarea></div>
+  <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px">
+    <button class="btn btn-g" onclick="closeModal('addPlayerModal')">Cancel</button>
+    <button class="btn btn-p" onclick="savePlayer()"><i class="ti ti-check"></i>Save player</button>
+  </div>
+</div></div>
+
+<div class="mb" id="logPlayerSessionModal"><div class="mo" style="width:400px">
+  <div class="mt">Log session</div><input type="hidden" id="lps-pid">
+  <div class="fg"><label class="fl">Session name</label><input type="text" id="lps-name" placeholder="e.g. Morning shooting"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="fg"><label class="fl">Makes</label><input type="number" id="lps-makes" placeholder="0" min="0"></div>
+    <div class="fg"><label class="fl">Attempts</label><input type="number" id="lps-att" placeholder="0" min="0"></div>
+  </div>
+  <div class="fg"><label class="fl">Category</label><select id="lps-cat"></select></div>
+  <div style="display:flex;gap:10px;justify-content:flex-end">
+    <button class="btn btn-g" onclick="closeModal('logPlayerSessionModal')">Cancel</button>
+    <button class="btn btn-p" onclick="logPlayerSession()"><i class="ti ti-check"></i>Log</button>
+  </div>
+</div></div>
+
+<div class="mb" id="addDrillModal"><div class="mo">
+  <div class="mt" id="drillModalTitle">Add new drill</div>
+  <div class="fg"><label class="fl">Drill name</label><input type="text" id="nd-name" placeholder="e.g. Elbow pull-up"></div>
+  <div class="fg"><label class="fl">Description</label><textarea id="nd-desc" rows="2" placeholder="Describe the drill…"></textarea></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="fg"><label class="fl">Category</label><select id="nd-cat"></select></div>
+    <div class="fg"><label class="fl">Level</label><select id="nd-lvl"><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="fg"><label class="fl">Duration / reps</label><input type="text" id="nd-dur" placeholder="e.g. 3×30s"></div>
+    <div class="fg"><label class="fl">Participants</label><select id="nd-part"><option>Individual</option><option>Partner</option><option>Small group (3–5)</option><option>Full team</option></select></div>
+  </div>
+  <div class="fg"><label class="fl">Equipment needed</label><input type="text" id="nd-equip" placeholder="e.g. Basketball, Cones, Chair"></div>
+  <div class="fg"><label class="fl">YouTube or Instagram URL</label><input type="text" id="nd-link" placeholder="https://youtube.com/watch?v=…"></div>
+  <div class="fg">
+    <label class="fl">Tags <span style="color:var(--mu);font-weight:400">(click to select, double-click to rename)</span></label>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px" id="nd-tag-list"></div>
+    <div style="display:flex;gap:6px"><input type="text" id="nd-new-tag" placeholder="New tag…" style="flex:1"><button class="btn btn-g btn-sm" onclick="addCustomTag()"><i class="ti ti-plus"></i>Add</button></div>
+  </div>
+  <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px">
+    <button class="btn btn-g" onclick="closeModal('addDrillModal')">Cancel</button>
+    <button class="btn btn-p" onclick="saveDrill()"><i class="ti ti-check"></i>Save drill</button>
+  </div>
+</div></div>
+
+<div class="mb" id="addSkillModal"><div class="mo" style="width:400px">
+  <div class="mt">Add skill</div>
+  <div class="fg"><label class="fl">Category</label><select id="sk-cat"></select></div>
+  <div class="fg"><label class="fl">Skill name</label><input type="text" id="sk-name" placeholder="e.g. Corner 3"></div>
+  <div class="fg"><label class="fl">Progress % (0–100)</label><input type="number" id="sk-pct" value="0" min="0" max="100"></div>
+  <div style="display:flex;gap:10px;justify-content:flex-end">
+    <button class="btn btn-g" onclick="closeModal('addSkillModal')">Cancel</button>
+    <button class="btn btn-p" onclick="saveSkill()"><i class="ti ti-check"></i>Add skill</button>
+  </div>
+</div></div>
+
+<div class="mb" id="editSkillModal"><div class="mo" style="width:360px">
+  <div class="mt">Edit skill</div>
+  <input type="hidden" id="esk-cat"><input type="hidden" id="esk-idx">
+  <div class="fg"><label class="fl">Skill name</label><input type="text" id="esk-name"></div>
+  <div class="fg"><label class="fl">Progress % (0–100)</label><input type="number" id="esk-pct" min="0" max="100"></div>
+  <div style="display:flex;gap:10px;justify-content:flex-end">
+    <button class="btn btn-g btn-sm" style="color:var(--re);border-color:var(--re)" onclick="deleteSkill()"><i class="ti ti-trash"></i>Delete</button>
+    <button class="btn btn-g" onclick="closeModal('editSkillModal')">Cancel</button>
+    <button class="btn btn-p" onclick="updateSkill()"><i class="ti ti-check"></i>Save</button>
+  </div>
+</div></div>
+
+<div class="mb" id="addStatModal"><div class="mo" style="width:460px">
+  <div class="mt">Log session</div>
+  <div class="fg"><label class="fl">Session name</label><input type="text" id="ls-name" placeholder="e.g. Morning shooting"></div>
+  <div class="fg"><label class="fl">Player</label><select id="ls-player"><option value="">— Team / unassigned —</option></select></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="fg"><label class="fl">Makes</label><input type="number" id="ls-makes" placeholder="0" min="0"></div>
+    <div class="fg"><label class="fl">Attempts</label><input type="number" id="ls-att" placeholder="0" min="0"></div>
+  </div>
+  <div class="fg"><label class="fl">Category</label><select id="ls-cat"></select></div>
+  <div class="fg"><label class="fl">Result (optional)</label>
+    <div style="display:flex;gap:8px">
+      <button type="button" id="ls-win-btn" class="btn btn-g btn-sm" onclick="setResultModal('win')" style="flex:1;justify-content:center;border-color:#BBF7D0;color:var(--gr)"><i class="ti ti-trophy"></i>Win</button>
+      <button type="button" id="ls-loss-btn" class="btn btn-g btn-sm" onclick="setResultModal('loss')" style="flex:1;justify-content:center;border-color:#FECACA;color:var(--re)"><i class="ti ti-x"></i>Loss</button>
+      <button type="button" id="ls-none-btn" class="btn btn-g btn-sm" onclick="setResultModal('')" style="flex:1;justify-content:center">—</button>
+    </div>
+    <input type="hidden" id="ls-result" value="">
+  </div>
+  <div class="fg"><label class="fl">Score (optional)</label>
+    <div style="display:flex;align-items:center;gap:8px">
+      <input type="number" id="ls-score-us" placeholder="Us" min="0" style="text-align:center">
+      <span style="font-weight:700;color:var(--mu);font-size:16px">—</span>
+      <input type="number" id="ls-score-them" placeholder="Them" min="0" style="text-align:center">
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;justify-content:flex-end">
+    <button class="btn btn-g" onclick="closeModal('addStatModal')">Cancel</button>
+    <button class="btn btn-p" onclick="logSession()"><i class="ti ti-check"></i>Log</button>
+  </div>
+</div></div>
+
+<script>
+// ==================== SAVE / LOAD ====================
+const STORE_KEY = 'hoopiq-data';
+let saveTimer = null;
+let saveStatus = 'saved'; // 'saved' | 'unsaved' | 'saving' | 'error'
+
+function setSaveStatus(s, msg){
+  saveStatus = s;
+  const dot = document.getElementById('save-dot');
+  const lbl = document.getElementById('save-label');
+  dot.className = 'save-dot ' + (s === 'saving' ? 'saving' : s === 'saved' ? 'saved' : s === 'error' ? 'error' : '');
+  lbl.textContent = msg || (s === 'saved' ? 'All changes saved' : s === 'saving' ? 'Saving…' : s === 'error' ? 'Save failed' : 'Unsaved changes');
+}
+
+function scheduleSave(){
+  setSaveStatus('unsaved');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveNow, 2500);
+}
+
+async function saveNow(){
+  clearTimeout(saveTimer);
+  setSaveStatus('saving');
+  const payload = JSON.stringify({categories, players, drills, allTags, skillMap, sessions, nextCatId});
+  try {
+    const result = await window.storage.set(STORE_KEY, payload);
+    if(result){
+      setSaveStatus('saved');
+      const now = new Date();
+      document.getElementById('last-saved').textContent = `Last saved ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+    } else {
+      setSaveStatus('error');
+    }
+  } catch(e){
+    setSaveStatus('error', 'Save failed');
+  }
+}
+
+async function loadData(){
+  try {
+    const result = await window.storage.get(STORE_KEY);
+    if(result && result.value){
+      const d = JSON.parse(result.value);
+      if(d.categories) categories = d.categories;
+      if(d.players)    players    = d.players;
+      if(d.drills)     drills     = d.drills;
+      if(d.allTags)    allTags    = d.allTags;
+      if(d.skillMap)   skillMap   = d.skillMap;
+      if(d.sessions)   sessions   = d.sessions;
+      if(d.nextCatId)  nextCatId  = d.nextCatId;
+    }
+  } catch(e){ /* first load — no data yet */ }
+}
+
+// Wrap every data-mutating action to also schedule a save
+function mutate(fn){ return function(...args){ fn(...args); scheduleSave(); }; }
+
+// ==================== CATEGORIES ====================
+let categories = [
+  {id:1,name:'Form Shooting',color:'#E8650A'},{id:2,name:'Mid-Range',color:'#2563EB'},
+  {id:3,name:'3-Point',color:'#7C3AED'},{id:4,name:'Free Throw',color:'#16A34A'},
+  {id:5,name:'Off-Dribble',color:'#DC2626'},{id:6,name:'Catch & Shoot',color:'#D97706'},
+  {id:7,name:'Post Shooting',color:'#0891B2'},
+];
+let nextCatId = 8;
+let selectedCatColor = '#E8650A';
+function catColor(name){return categories.find(c=>c.name===name)?.color||'#888';}
+function catNames(){return categories.map(c=>c.name);}
+function populateCatSelects(){
+  const opts=categories.map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
+  const gameOpt=`<option value="Game / Scrimmage">Game / Scrimmage</option>`;
+  ['f-cat','nd-cat','sk-cat','ls-cat','lps-cat','plan-cat'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    if(id==='f-cat')el.innerHTML=`<option value="">All categories</option>`+opts+gameOpt;
+    else if(id==='ls-cat')el.innerHTML=opts+gameOpt;
+    else el.innerHTML=opts;
+  });
+}
+function renderCatList(){
+  document.getElementById('cat-list').innerHTML=categories.map(c=>`
+    <div class="cat-row"><div class="cat-dot" style="background:${c.color}"></div>
+    <span style="flex:1;font-weight:500">${c.name}</span>
+    <button class="btn-ic" onclick="openEditCat(${c.id})"><i class="ti ti-pencil"></i></button>
+    <button class="btn-ic" onclick="deleteCatById(${c.id})" style="color:var(--re)"><i class="ti ti-trash"></i></button>
+    </div>`).join('');
+  document.getElementById('dash-cat-count').textContent=categories.length;
+}
+function pickCatColor(el){selectedCatColor=el.dataset.col;document.querySelectorAll('.cat-col-opt').forEach(e=>e.style.border=e===el?'3px solid var(--tx)':'2px solid transparent');}
+function openEditCat(id){
+  const c=categories.find(x=>x.id===id);if(!c)return;
+  document.getElementById('addCatTitle').textContent='Edit category';
+  document.getElementById('cat-edit-id').value=id;
+  document.getElementById('cat-name').value=c.name;
+  selectedCatColor=c.color;
+  document.querySelectorAll('.cat-col-opt').forEach(e=>e.style.border=e.dataset.col===c.color?'3px solid var(--tx)':'2px solid transparent');
+  openModal('addCatModal');
+}
+function saveCat(){
+  const name=document.getElementById('cat-name').value.trim();if(!name)return alert('Enter a category name.');
+  const editId=parseInt(document.getElementById('cat-edit-id').value||0);
+  if(editId){
+    const c=categories.find(x=>x.id===editId);
+    if(c){const old=c.name;c.name=name;c.color=selectedCatColor;
+      drills.forEach(d=>{if(d.cat===old)d.cat=name;});
+      sessions.forEach(s=>{if(s.cat===old)s.cat=name;});
+      players.forEach(p=>p.sessions.forEach(s=>{if(s.cat===old)s.cat=name;}));
+      Object.keys(skillMap).forEach(k=>{if(k===old){skillMap[name]=skillMap[k];delete skillMap[k];}});
+    }
+  } else {
+    if(categories.find(c=>c.name===name))return alert('Category already exists.');
+    categories.push({id:nextCatId++,name,color:selectedCatColor});
+  }
+  document.getElementById('cat-edit-id').value='';
+  document.getElementById('addCatTitle').textContent='Add category';
+  document.getElementById('cat-name').value='';
+  closeModal('addCatModal');renderCatList();populateCatSelects();scheduleSave();
+}
+function deleteCatById(id){
+  const c=categories.find(x=>x.id===id);if(!c)return;
+  if(!confirm(`Delete "${c.name}"?`))return;
+  categories=categories.filter(x=>x.id!==id);
+  renderCatList();populateCatSelects();scheduleSave();
+}
+
+// ==================== DATA DEFAULTS ====================
+let players = [
+  {id:1,name:'Marcus Johnson',pos:'SG',num:23,grp:'Varsity',hand:'Right',height:"6'2\"",dob:'2008-03-14',color:'#E8650A',strengths:['Free throws','Corner 3s'],improve:['Off-dribble','Step-back'],notes:'Strong shooter with great form.',sessions:[
+    {date:'May 8, 2026',name:'Form shooting AM',makes:68,att:100,cat:'Form Shooting',result:'',score:''},
+    {date:'May 7, 2026',name:'3-point workout',makes:42,att:70,cat:'3-Point',result:'win',score:'72–65'},
+  ],goals:[{text:'Hit 80% from FT line',done:true},{text:'Make 5 consecutive corner 3s',done:false}]},
+  {id:2,name:'Aaliyah Torres',pos:'PG',num:3,grp:'Varsity',hand:'Left',height:"5'9\"",dob:'2007-11-22',color:'#7C3AED',strengths:['Mid-Range','Pull-up jumper'],improve:['Free throws'],notes:'Explosive guard.',sessions:[
+    {date:'May 8, 2026',name:'Mid-range session',makes:55,att:80,cat:'Mid-Range',result:'',score:''},
+  ],goals:[{text:'Shoot 70%+ from mid-range',done:false}]},
+  {id:3,name:'Devon Carter',pos:'SF',num:11,grp:'JV',hand:'Right',height:"6'4\"",dob:'2009-06-05',color:'#16A34A',strengths:['Post Shooting'],improve:['3-Point'],notes:'Long athlete.',sessions:[
+    {date:'May 7, 2026',name:'Post moves',makes:30,att:50,cat:'Post Shooting',result:'',score:''},
+  ],goals:[{text:'Develop drop-step turnaround',done:true}]},
+  {id:4,name:'Jordan Lee',pos:'C',num:45,grp:'Varsity',hand:'Right',height:"6'8\"",dob:'2007-08-19',color:'#0891B2',strengths:['Post Shooting','Free Throw'],improve:['Mid-Range'],notes:'Dominant in the post.',sessions:[
+    {date:'May 8, 2026',name:'Post-up session',makes:40,att:60,cat:'Post Shooting',result:'win',score:'81–74'},
+  ],goals:[{text:'Post-up efficiency above 55%',done:true}]},
+];
+let drills = [
+  {id:1,name:'Elbow form shots',desc:'Stationary from elbow — focus on BEEF.',cat:'Form Shooting',lvl:'Beginner',dur:'3×20 reps',part:'Individual',equip:'Basketball',link:'',tags:['Form','Fundamentals']},
+  {id:2,name:'Free throw ladder',desc:'10 free throws per round, 3 rounds.',cat:'Free Throw',lvl:'Beginner',dur:'3×10 reps',part:'Individual',equip:'Basketball',link:'https://youtube.com/watch?v=example1',linkType:'youtube',tags:['Free Throw','Pressure']},
+  {id:3,name:'Mid-range pull-up',desc:'Dribble to elbow, pull up — both sides.',cat:'Mid-Range',lvl:'Intermediate',dur:'4×30s',part:'Individual',equip:'Basketball, Cones',link:'',tags:['Mid-Range']},
+  {id:4,name:'Corner 3-point series',desc:'Catch & shoot from corners and wings.',cat:'3-Point',lvl:'Intermediate',dur:'5 spots × 5 reps',part:'Partner',equip:'Basketball',link:'',tags:['3-Point','Catch & Shoot']},
+  {id:5,name:'Post-up turnaround',desc:'Drop step into turnaround jumper.',cat:'Post Shooting',lvl:'Advanced',dur:'3×8 reps',part:'Partner',equip:'Basketball',link:'',tags:['Post','Footwork']},
+  {id:6,name:'Catch & shoot — 5 spots',desc:'Partner feeds ball, shooter rotates 5 spots.',cat:'Catch & Shoot',lvl:'Beginner',dur:'3 rounds',part:'Partner',equip:'Basketball, Rebounder (optional)',link:'',tags:['Catch & Shoot','Fundamentals']},
+  {id:7,name:'Off-dribble step-back',desc:'One dribble into step-back jumper.',cat:'Off-Dribble',lvl:'Advanced',dur:'3×10 reps',part:'Individual',equip:'Basketball',link:'',tags:['Off-Dribble','Advanced']},
+];
+let allTags=['Form','Fundamentals','Mid-Range','3-Point','Free Throw','Off-Dribble','Catch & Shoot','Post','Footwork','Pressure','Screens','Team','Advanced'];
+let selectedTags=[];
+let skillMap={'Form Shooting':[{name:'Stance & balance',pct:90},{name:'Elbow alignment',pct:75},{name:'Follow-through',pct:80}],'Mid-Range':[{name:'Pull-up jumper',pct:65},{name:'Floater',pct:40}],'3-Point':[{name:'Catch & shoot',pct:70},{name:'Corner 3',pct:80},{name:'Step-back 3',pct:25}],'Free Throw':[{name:'Routine consistency',pct:85},{name:'Pressure FTs',pct:60}],'Off-Dribble':[{name:'Step-back',pct:40}],'Catch & Shoot':[{name:'Footwork on catch',pct:80},{name:'Quick release',pct:65}],'Post Shooting':[{name:'Drop step',pct:70},{name:'Turnaround',pct:55}]};
+let sessions=[
+  {date:'May 8, 2026',name:'Form shooting AM',player:'Marcus Johnson',makes:68,att:100,cat:'Form Shooting',result:'',score:''},
+  {date:'May 7, 2026',name:'3-point workout',player:'Aaliyah Torres',makes:42,att:70,cat:'3-Point',result:'win',score:'72–65'},
+  {date:'May 6, 2026',name:'FT practice',player:'Marcus Johnson',makes:88,att:100,cat:'Free Throw',result:'',score:''},
+  {date:'May 5, 2026',name:'Post-up session',player:'Jordan Lee',makes:40,att:60,cat:'Post Shooting',result:'win',score:'81–74'},
+];
+let planItems=[];
+const prePlans=[
+  {name:'Form Shooting Fundamentals',dur:'40 min',lvl:'Beginner',cat:'Form Shooting',drills:['Elbow form shots','Free throw ladder','Catch & shoot — 5 spots']},
+  {name:'Mid-Range & Pull-Up Workshop',dur:'55 min',lvl:'Intermediate',cat:'Mid-Range',drills:['Mid-range pull-up','Off-dribble step-back']},
+  {name:'3-Point Specialist',dur:'50 min',lvl:'Intermediate',cat:'3-Point',drills:['Corner 3-point series','Catch & shoot — 5 spots']},
+  {name:'Full Shooting Workout',dur:'75 min',lvl:'All levels',cat:'Mixed',drills:['Elbow form shots','Mid-range pull-up','Corner 3-point series','Free throw ladder']},
+];
+const participants=['All','Individual','Partner','Small group (3–5)','Full team'];
+let activeParticipant='All';
+let selectedColor='#E8650A';
+let currentProfileId=null;
+let editingPlayerId=null;
+let tSec=30,tRunning=false,tInterval=null,tMakes=0,tAtt=0,tSets=0,tRestInt=null,tRestRunning=false,tResult='';
+
+// ==================== NAV ====================
+function go(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.ni').forEach(n=>{if(n.getAttribute('onclick')?.includes("'"+id+"'"))n.classList.add('active');});
+  if(id==='players')renderPlayers();
+  if(id==='drills'){renderDrills();renderPartPills();}
+  if(id==='plans')renderPlans();
+  if(id==='skillmap')renderSkillMap();
+  if(id==='progress')renderProgress();
+  if(id==='dash')renderDash();
+  if(id==='categories')renderCatList();
+}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+// ==================== DASHBOARD ====================
+function renderDash(){
+  const wins=sessions.filter(s=>s.result==='win').length,losses=sessions.filter(s=>s.result==='loss').length;
+  document.getElementById('dash-sess-count').textContent=sessions.length;
+  document.getElementById('dash-player-count').textContent=players.length;
+  document.getElementById('dash-cat-count').textContent=categories.length;
+  document.getElementById('dash-wl').innerHTML=`<span style="color:var(--gr)">${wins}</span><span style="color:var(--mu);font-size:18px"> – </span><span style="color:var(--re)">${losses}</span>`;
+  const ranked=[...players].map(p=>{const m=p.sessions.reduce((a,s)=>a+s.makes,0),a=p.sessions.reduce((a,s)=>a+s.att,0);return{...p,pct:a?Math.round(m/a*100):0,makes:m};}).sort((a,b)=>b.pct-a.pct).slice(0,4);
+  document.getElementById('dash-top-players').innerHTML=ranked.map(p=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd);cursor:pointer" onclick="openProfile(${p.id})">
+      <div style="width:34px;height:34px;border-radius:50%;background:${p.color};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0">${initials(p.name)}</div>
+      <div style="flex:1"><div style="font-weight:500;font-size:13px">${p.name}</div><div style="font-size:11px;color:var(--mu)">${p.pos} · ${p.grp}</div></div>
+      <div style="text-align:right"><div style="font-weight:700;color:var(--or);font-size:15px">${p.pct}%</div><div style="font-size:10px;color:var(--mu)">${p.makes} makes</div></div>
+    </div>`).join('');
+}
+
+// ==================== PLAYERS ====================
+function initials(n){return n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();}
+function renderPlayers(){
+  const srch=document.querySelector('#page-players input')?.value?.toLowerCase()||'';
+  const pos=document.getElementById('f-pos')?.value||'';
+  const grp=document.getElementById('f-grp')?.value||'';
+  const filtered=players.filter(p=>(!srch||p.name.toLowerCase().includes(srch)||p.pos.toLowerCase().includes(srch))&&(!pos||p.pos===pos)&&(!grp||p.grp===grp));
+  document.getElementById('player-grid').innerHTML=filtered.map(p=>{
+    const m=p.sessions.reduce((a,s)=>a+s.makes,0),a=p.sessions.reduce((a,s)=>a+s.att,0),pct=a?Math.round(m/a*100):0;
+    return`<div class="player-card" onclick="openProfile(${p.id})">
+      <div class="player-banner" style="background:${p.color}20;border-bottom:3px solid ${p.color}">
+        <div class="player-avatar" style="background:${p.color}">${initials(p.name)}</div>
+      </div>
+      <div class="player-body">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div><div class="player-name">${p.name}</div><div class="player-meta">#${p.num} · ${p.pos} · ${p.grp}</div></div>
+          <button class="btn-ic" onclick="event.stopPropagation();editingPlayerId=${p.id};populateEditPlayer(${p.id})" title="Edit"><i class="ti ti-pencil"></i></button>
+        </div>
+        <div class="player-stats">
+          <div class="p-stat"><div class="p-stat-v" style="color:${p.color}">${pct}%</div><div class="p-stat-l">Make %</div></div>
+          <div class="p-stat"><div class="p-stat-v" style="color:var(--bl)">${m}</div><div class="p-stat-l">Makes</div></div>
+          <div class="p-stat"><div class="p-stat-v" style="color:var(--mu)">${p.sessions.length}</div><div class="p-stat-l">Sessions</div></div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:10px">
+          ${p.strengths.slice(0,2).map(s=>`<span class="tag tag-gr" style="font-size:9px">${s}</span>`).join('')}
+          ${p.improve.slice(0,1).map(s=>`<span class="tag tag-or" style="font-size:9px">↑ ${s}</span>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  }).join('')||`<div style="color:var(--mu);grid-column:1/-1;padding:40px;text-align:center">No players found.</div>`;
+}
+
+function openProfile(id){
+  currentProfileId=id;const p=players.find(x=>x.id===id);if(!p)return;
+  document.getElementById('lps-pid').value=id;
+  document.getElementById('prof-title').textContent=p.name;
+  document.getElementById('prof-sub').textContent=`#${p.num} · ${p.pos} · ${p.grp} · ${p.hand}-handed · ${p.height}`;
+  const banner=document.getElementById('prof-banner');
+  banner.style.cssText=`height:100px;background:${p.color}25;border-bottom:4px solid ${p.color};position:relative`;
+  banner.innerHTML=`<div class="profile-avatar" style="background:${p.color}">${initials(p.name)}</div>`;
+  document.getElementById('prof-name').textContent=p.name;
+  document.getElementById('prof-meta').textContent=`${p.pos} · #${p.num} · ${p.grp} · ${p.hand}-handed · ${p.height}`;
+  const m=p.sessions.reduce((a,s)=>a+s.makes,0),a=p.sessions.reduce((a,s)=>a+s.att,0);
+  document.getElementById('prof-pct').textContent=a?Math.round(m/a*100)+'%':'—';
+  document.getElementById('prof-badges').innerHTML=p.strengths.map(s=>`<span class="skill-pill tag-gr" style="border-color:#BBF7D0">💚 ${s}</span>`).join('')+p.improve.map(s=>`<span class="skill-pill tag-or" style="border-color:#FCD9BD">↑ ${s}</span>`).join('');
+  document.getElementById('prof-notes-wrap').innerHTML=p.notes?`<div style="font-size:12px;color:var(--mu);background:var(--sur2);border-radius:8px;padding:10px 12px;border:1px solid var(--bd)"><i class="ti ti-notes" style="margin-right:4px"></i>${p.notes}</div>`:'';
+  document.getElementById('prof-stats').innerHTML=`
+    <div class="stat"><div class="sl">Make %</div><div class="sv" style="color:${p.color}">${a?Math.round(m/a*100):0}%</div></div>
+    <div class="stat"><div class="sl">Total makes</div><div class="sv" style="color:var(--gr)">${m}</div><div class="sc" style="color:var(--mu)">${a} att</div></div>
+    <div class="stat"><div class="sl">Sessions</div><div class="sv" style="color:var(--bl)">${p.sessions.length}</div></div>
+    <div class="stat"><div class="sl">Best session</div><div class="sv" style="color:var(--pu)">${p.sessions.length?Math.max(...p.sessions.map(s=>s.att?Math.round(s.makes/s.att*100):0)):0}%</div></div>`;
+  profileTab('skills');go('profile');
+}
+
+function profileTab(tab){
+  document.querySelectorAll('#page-profile .tab').forEach((t,i)=>t.classList.toggle('active',['skills','sessions','goals'][i]===tab));
+  ['skills','sessions','goals'].forEach(t=>document.getElementById('prof-tab-'+t).style.display=t===tab?'block':'none');
+  const p=players.find(x=>x.id===currentProfileId);if(!p)return;
+  if(tab==='skills')renderProfileSkills(p);
+  if(tab==='sessions')renderProfileSessions(p);
+  if(tab==='goals')renderProfileGoals(p);
+}
+
+function renderProfileSkills(p){
+  const cats=categories.map(c=>c.name);
+  const cM={},cA={};cats.forEach(c=>{cM[c]=0;cA[c]=0;});
+  p.sessions.forEach(s=>{if(cM[s.cat]!==undefined){cM[s.cat]+=s.makes;cA[s.cat]+=s.att;}});
+  document.getElementById('prof-skill-bars').innerHTML=cats.map(c=>{const pct=cA[c]?Math.round(cM[c]/cA[c]*100):0;return`<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:${catColor(c)};display:inline-block"></span>${c}</span><span style="color:var(--mu)">${pct}% (${cM[c]}/${cA[c]})</span></div><div class="pb"><div class="pf" style="width:${pct}%;background:${catColor(c)}"></div></div></div>`;}).join('');
+  const maxM=Math.max(...Object.values(cM),1);
+  document.getElementById('prof-chart').innerHTML=`<div class="chart-area"><div class="cbar-wrap">${cats.map(c=>`<div style="display:flex;flex-direction:column;flex:1"><div class="cbar" style="height:${Math.round(cM[c]/maxM*100)}%;background:${catColor(c)};opacity:.85" data-tip="${c}: ${cM[c]}/${cA[c]}"></div><div class="cbar-label">${c.split(' ')[0]}</div></div>`).join('')}</div></div>`;
+}
+function renderProfileSessions(p){document.getElementById('prof-sess-log').innerHTML=p.sessions.map(s=>`<tr style="border-top:1px solid var(--bd);font-size:12px"><td style="padding:10px 4px 10px 0;color:var(--mu)">${s.date}</td><td style="padding:10px 4px">${s.name}</td><td style="padding:10px 4px;font-weight:600;color:var(--gr)">${s.makes}</td><td style="padding:10px 4px;color:var(--mu)">${s.att}</td><td style="padding:10px 4px;font-weight:600;color:var(--or)">${s.att?Math.round(s.makes/s.att*100):0}%</td><td style="padding:10px 4px"><span class="badge b-mu">${s.cat}</span></td></tr>`).join('')||`<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--mu)">No sessions logged yet.</td></tr>`;}
+function renderProfileGoals(p){document.getElementById('prof-goals-list').innerHTML=p.goals.map((g,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd)"><input type="checkbox" ${g.done?'checked':''} onchange="toggleGoal(${i},this.checked)" style="width:16px;height:16px;accent-color:var(--or);cursor:pointer"><span style="flex:1;${g.done?'text-decoration:line-through;color:var(--mu)':''}">${g.text}</span><button class="btn-ic" onclick="removeGoal(${i})"><i class="ti ti-x" style="font-size:13px"></i></button></div>`).join('')||`<div style="color:var(--mu);text-align:center;padding:20px">No goals set yet.</div>`;}
+
+function toggleGoal(i,done){const p=players.find(x=>x.id===currentProfileId);if(p){p.goals[i].done=done;renderProfileGoals(p);scheduleSave();}}
+function removeGoal(i){const p=players.find(x=>x.id===currentProfileId);if(p){p.goals.splice(i,1);renderProfileGoals(p);scheduleSave();}}
+function addGoal(){const t=prompt('New goal:');if(!t)return;const p=players.find(x=>x.id===currentProfileId);if(p){p.goals.push({text:t,done:false});renderProfileGoals(p);scheduleSave();}}
+
+function printProfile(){
+  const p=players.find(x=>x.id===currentProfileId);if(!p)return;
+  const m=p.sessions.reduce((a,s)=>a+s.makes,0),a=p.sessions.reduce((a,s)=>a+s.att,0),pct=a?Math.round(m/a*100):0;
+  const wins=p.sessions.filter(s=>s.result==='win').length,losses=p.sessions.filter(s=>s.result==='loss').length;
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><title>${p.name} – Player Profile</title>
+  <style>body{font-family:Segoe UI,sans-serif;padding:32px;color:#1A1A2E;max-width:800px;margin:0 auto}h1{font-size:24px;margin-bottom:4px}h2{font-size:14px;color:#6B7494;margin:20px 0 8px;border-bottom:2px solid #E2E5EF;padding-bottom:5px;text-transform:uppercase}
+  .stats{display:flex;gap:16px;margin:16px 0;flex-wrap:wrap}.stat-box{background:#F5F6FA;border-radius:10px;padding:12px 16px;text-align:center;min-width:90px}.stat-val{font-size:24px;font-weight:700}.stat-lbl{font-size:11px;color:#6B7494;text-transform:uppercase}
+  table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;padding:7px 5px;background:#F5F6FA;color:#6B7494;font-weight:500;border-bottom:2px solid #E2E5EF}td{padding:7px 5px;border-bottom:1px solid #E2E5EF}
+  .tag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;margin:2px;background:#FEF3EC;color:#B84E05}.tag-gr{background:#DCFCE7;color:#15803D}
+  @media print{button{display:none}}</style></head><body>
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:8px">
+    <div style="width:64px;height:64px;border-radius:50%;background:${p.color};display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;font-weight:700">${initials(p.name)}</div>
+    <div><h1>${p.name}</h1><div style="color:#6B7494">#${p.num} · ${p.pos} · ${p.grp} · ${p.hand}-handed · ${p.height}</div></div>
+  </div>
+  <div class="stats">
+    <div class="stat-box"><div class="stat-val" style="color:${p.color}">${pct}%</div><div class="stat-lbl">Make %</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:#16A34A">${m}</div><div class="stat-lbl">Makes</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:#2563EB">${p.sessions.length}</div><div class="stat-lbl">Sessions</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:#16A34A">${wins}</div><div class="stat-lbl">Wins</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:#DC2626">${losses}</div><div class="stat-lbl">Losses</div></div>
+  </div>
+  <h2>Strengths</h2><div>${p.strengths.map(s=>`<span class="tag tag-gr">${s}</span>`).join('')||'—'}</div>
+  <h2>Areas to Improve</h2><div>${p.improve.map(s=>`<span class="tag">${s}</span>`).join('')||'—'}</div>
+  ${p.notes?`<h2>Coach Notes</h2><p style="font-size:13px">${p.notes}</p>`:''}
+  <h2>Goals</h2><ul style="font-size:13px;padding-left:20px">${p.goals.map(g=>`<li style="${g.done?'text-decoration:line-through;color:#888':''}">${g.text}</li>`).join('')||'<li style="color:#888">No goals.</li>'}</ul>
+  <h2>Session Log</h2>
+  <table><thead><tr><th>Date</th><th>Session</th><th>Makes</th><th>Att</th><th>%</th><th>Category</th><th>Result</th><th>Score</th></tr></thead>
+  <tbody>${p.sessions.map(s=>`<tr><td>${s.date}</td><td>${s.name}</td><td>${s.makes}</td><td>${s.att}</td><td>${s.att?Math.round(s.makes/s.att*100):0}%</td><td>${s.cat}</td><td>${s.result||'—'}</td><td>${s.score||'—'}</td></tr>`).join('')}</tbody></table>
+  <div style="margin-top:32px;font-size:11px;color:#aaa">HoopIQ · ${new Date().toLocaleDateString()}</div>
+  <script>window.onload=()=>window.print()<\/script></body></html>`);w.document.close();
+}
+
+function openEditPlayer(){editingPlayerId=currentProfileId;populateEditPlayer(currentProfileId);}
+function populateEditPlayer(id){
+  const p=players.find(x=>x.id===id);if(!p)return;
+  document.getElementById('addPlayerTitle').textContent='Edit player';
+  document.getElementById('ap-name').value=p.name;document.getElementById('ap-num').value=p.num;
+  document.getElementById('ap-height').value=p.height;document.getElementById('ap-dob').value=p.dob||'';
+  document.getElementById('ap-str').value=p.strengths.join(', ');document.getElementById('ap-imp').value=p.improve.join(', ');
+  document.getElementById('ap-notes').value=p.notes||'';
+  ['ap-pos','ap-grp','ap-hand'].forEach(fid=>{const el=document.getElementById(fid);if(el)el.value={['ap-pos']:p.pos,['ap-grp']:p.grp,['ap-hand']:p.hand}[fid];});
+  selectedColor=p.color;document.querySelectorAll('.color-opt').forEach(e=>e.style.border=e.dataset.col===p.color?'3px solid var(--tx)':'2px solid transparent');
+  openModal('addPlayerModal');
+}
+function pickColor(el){selectedColor=el.dataset.col;document.querySelectorAll('.color-opt').forEach(e=>e.style.border=e===el?'3px solid var(--tx)':'2px solid transparent');}
+function savePlayer(){
+  const name=document.getElementById('ap-name').value.trim();if(!name)return alert('Enter player name.');
+  const obj={name,pos:document.getElementById('ap-pos').value,num:parseInt(document.getElementById('ap-num').value)||0,grp:document.getElementById('ap-grp').value,hand:document.getElementById('ap-hand').value,height:document.getElementById('ap-height').value,dob:document.getElementById('ap-dob').value,color:selectedColor,strengths:document.getElementById('ap-str').value.split(',').map(s=>s.trim()).filter(Boolean),improve:document.getElementById('ap-imp').value.split(',').map(s=>s.trim()).filter(Boolean),notes:document.getElementById('ap-notes').value.trim()};
+  if(editingPlayerId){const idx=players.findIndex(x=>x.id===editingPlayerId);if(idx>-1)players[idx]={...players[idx],...obj};editingPlayerId=null;}
+  else players.push({id:Date.now(),...obj,sessions:[],goals:[]});
+  document.getElementById('addPlayerTitle').textContent='Add player';
+  ['ap-name','ap-num','ap-height','ap-dob','ap-str','ap-imp','ap-notes'].forEach(id=>document.getElementById(id).value='');
+  closeModal('addPlayerModal');renderPlayers();updatePlayerDropdowns();scheduleSave();
+  if(currentProfileId)openProfile(currentProfileId);
+}
+function logPlayerSession(){
+  const pid=parseInt(document.getElementById('lps-pid').value);const p=players.find(x=>x.id===pid);if(!p)return;
+  const name=document.getElementById('lps-name').value.trim();if(!name)return alert('Enter session name.');
+  const makes=parseInt(document.getElementById('lps-makes').value)||0,att=parseInt(document.getElementById('lps-att').value)||0,cat=document.getElementById('lps-cat').value;
+  const now=new Date(),d=`${now.toLocaleString('default',{month:'short'})} ${now.getDate()}, ${now.getFullYear()}`;
+  p.sessions.unshift({date:d,name,makes,att,cat,result:'',score:''});
+  sessions.unshift({date:d,name,player:p.name,makes,att,cat,result:'',score:''});
+  closeModal('logPlayerSessionModal');['lps-name','lps-makes','lps-att'].forEach(id=>document.getElementById(id).value='');
+  scheduleSave();openProfile(pid);
+}
+function updatePlayerDropdowns(){
+  const opts=`<option value="">— Team / unassigned —</option>`+players.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  ['ls-player','t-player','plan-player'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts;});
+}
+
+// ==================== DRILLS ====================
+function openAddDrill(){document.getElementById('drillModalTitle').textContent='Add new drill';delete document.getElementById('addDrillModal').dataset.editId;['nd-name','nd-desc','nd-dur','nd-link','nd-equip'].forEach(id=>document.getElementById(id).value='');selectedTags=[];renderModalTags();openModal('addDrillModal');}
+function renderPartPills(){document.getElementById('part-pills').innerHTML=participants.map(p=>`<button class="pill${activeParticipant===p?' active':''}" onclick="setParticipant('${p}')">${p}</button>`).join('');}
+function setParticipant(p){activeParticipant=p;renderPartPills();renderDrills();}
+function renderDrills(){
+  const srch=document.querySelector('#page-drills input')?.value?.toLowerCase()||'';
+  const cat=document.getElementById('f-cat')?.value||'';const lvl=document.getElementById('f-lvl')?.value||'';
+  const filtered=drills.filter(d=>(!srch||d.name.toLowerCase().includes(srch)||d.desc.toLowerCase().includes(srch))&&(!cat||d.cat===cat)&&(!lvl||d.lvl===lvl)&&(activeParticipant==='All'||d.part===activeParticipant));
+  const lB={Beginner:'b-bl',Intermediate:'b-or',Advanced:'b-re'};
+  document.getElementById('drill-grid').innerHTML=filtered.map(d=>{
+    const link=d.link?`<a href="${d.link}" target="_blank" style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--or);text-decoration:none"><i class="ti ti-${d.linkType==='instagram'?'brand-instagram':'brand-youtube'}"></i>Watch demo</a>`:`<button onclick="promptLink(${d.id})" style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--mu);background:none;border:1px dashed var(--bd);border-radius:6px;padding:4px 10px;cursor:pointer"><i class="ti ti-link"></i>Add video</button>`;
+    return`<div class="dc"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px"><div style="font-weight:600;font-size:14px;flex:1;margin-right:8px">${d.name}</div><span class="badge ${lB[d.lvl]||'b-mu'}">${d.lvl}</span></div>
+    <div style="font-size:12px;color:var(--mu);margin-bottom:8px;line-height:1.5">${d.desc}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px"><span class="badge b-mu"><i class="ti ti-category" style="font-size:10px;margin-right:2px"></i>${d.cat}</span><span class="badge b-mu"><i class="ti ti-clock" style="font-size:10px;margin-right:2px"></i>${d.dur}</span><span class="badge b-mu"><i class="ti ti-users" style="font-size:10px;margin-right:2px"></i>${d.part}</span></div>
+    ${d.equip?`<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mu);margin-bottom:6px"><i class="ti ti-tools" style="font-size:13px"></i>${d.equip}</div>`:''}
+    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">${d.tags.map(t=>`<span class="tag tag-or">${t}</span>`).join('')}</div>
+    <div style="display:flex;justify-content:space-between;align-items:center">${link}<button class="btn-ic" onclick="openEditDrill(${d.id})"><i class="ti ti-pencil"></i></button></div>
+    </div>`;
+  }).join('')||`<div style="color:var(--mu);grid-column:1/-1;padding:30px;text-align:center">No drills found.</div>`;
+}
+function promptLink(id){const url=prompt('Paste a YouTube or Instagram URL:');if(url){const d=drills.find(x=>x.id===id);if(d){d.link=url;d.linkType=url.includes('instagram')?'instagram':'youtube';renderDrills();scheduleSave();}}}
+function renderModalTags(){document.getElementById('nd-tag-list').innerHTML=allTags.map(t=>`<span class="tag ${selectedTags.includes(t)?'tag-or':'tag-mu'}" style="cursor:pointer" onclick="toggleTag('${t}')" ondblclick="renameTag('${t}')">${t}</span>`).join('');}
+function toggleTag(t){selectedTags.includes(t)?selectedTags.splice(selectedTags.indexOf(t),1):selectedTags.push(t);renderModalTags();}
+function renameTag(old){const nw=prompt('Rename tag:',old);if(!nw||nw===old)return;allTags=allTags.map(t=>t===old?nw:t);selectedTags=selectedTags.map(t=>t===old?nw:t);drills.forEach(d=>{d.tags=d.tags.map(t=>t===old?nw:t);});renderModalTags();}
+function addCustomTag(){const v=document.getElementById('nd-new-tag').value.trim();if(!v)return;if(!allTags.includes(v))allTags.push(v);if(!selectedTags.includes(v))selectedTags.push(v);document.getElementById('nd-new-tag').value='';renderModalTags();}
+function openEditDrill(id){const d=drills.find(x=>x.id===id);if(!d)return;document.getElementById('drillModalTitle').textContent='Edit drill';document.getElementById('nd-name').value=d.name;document.getElementById('nd-desc').value=d.desc;document.getElementById('nd-cat').value=d.cat;document.getElementById('nd-lvl').value=d.lvl;document.getElementById('nd-dur').value=d.dur;document.getElementById('nd-part').value=d.part;document.getElementById('nd-equip').value=d.equip||'';document.getElementById('nd-link').value=d.link||'';selectedTags=[...d.tags];renderModalTags();document.getElementById('addDrillModal').dataset.editId=id;openModal('addDrillModal');}
+function saveDrill(){
+  const name=document.getElementById('nd-name').value.trim();if(!name)return alert('Enter drill name.');
+  const editId=parseInt(document.getElementById('addDrillModal').dataset.editId||0);
+  const link=document.getElementById('nd-link').value.trim();
+  const obj={name,desc:document.getElementById('nd-desc').value.trim(),cat:document.getElementById('nd-cat').value,lvl:document.getElementById('nd-lvl').value,dur:document.getElementById('nd-dur').value||'TBD',part:document.getElementById('nd-part').value,equip:document.getElementById('nd-equip').value.trim(),link,linkType:link.includes('instagram')?'instagram':'youtube',tags:[...selectedTags]};
+  if(editId){const idx=drills.findIndex(x=>x.id===editId);if(idx>-1)drills[idx]={...drills[idx],...obj};}
+  else drills.unshift({id:Date.now(),...obj});
+  delete document.getElementById('addDrillModal').dataset.editId;selectedTags=[];
+  ['nd-name','nd-desc','nd-dur','nd-link','nd-equip'].forEach(id=>document.getElementById(id).value='');
+  closeModal('addDrillModal');renderDrills();scheduleSave();
+}
+
+// ==================== PLANS ====================
+function renderPlans(){
+  updatePlayerDropdowns();populateCatSelects();
+  document.getElementById('plan-list').innerHTML=prePlans.map((p,i)=>`
+    <div class="card" style="cursor:pointer" onclick="loadPlan(${i})">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><div style="font-weight:600">${p.name}</div><div style="font-size:12px;color:var(--mu);margin-top:3px">${p.dur} · ${p.lvl}</div></div>
+        <span class="badge b-or">${p.cat}</span>
+      </div>
+      <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:5px">${p.drills.map(d=>`<span class="tag tag-mu">${d}</span>`).join('')}</div>
+    </div>`).join('');
+  renderPlanSessions();
+}
+function loadPlan(i){const p=prePlans[i];document.getElementById('plan-name').value=p.name;document.getElementById('plan-time').value=parseInt(p.dur);planItems=p.drills.map(d=>({drill:d,time:10}));renderPlanSessions();}
+function addPlanDrill(){planItems.push({drill:drills.length?drills[Math.floor(Math.random()*drills.length)].name:'New drill',time:10});renderPlanSessions();scheduleSave();}
+function renderPlanSessions(){document.getElementById('plan-sessions').innerHTML=planItems.map((it,i)=>`<div class="si"><i class="ti ti-grip-vertical" style="color:var(--mu);cursor:grab"></i><span class="si-time">${it.time}m</span><span style="flex:1">${it.drill}</span><button onclick="removePlanItem(${i})" style="background:none;border:none;color:var(--mu);cursor:pointer;font-size:14px"><i class="ti ti-x"></i></button></div>`).join('');}
+function removePlanItem(i){planItems.splice(i,1);renderPlanSessions();scheduleSave();}
+function savePlan(){const n=document.getElementById('plan-name').value.trim();if(!n)return alert('Enter a plan name.');scheduleSave();alert(`Plan "${n}" saved!`);}
+
+function downloadPlanPDF(){
+  const name=document.getElementById('plan-name').value.trim()||'Practice Plan';
+  const time=document.getElementById('plan-time').value||'—';
+  const cat=document.getElementById('plan-cat').value||'—';
+  const playerEl=document.getElementById('plan-player');
+  const playerName=playerEl.options[playerEl.selectedIndex]?.text||'Team';
+  if(!planItems.length)return alert('Add drills to your plan first.');
+  const equipSet=new Set();planItems.forEach(it=>{const d=drills.find(x=>x.name===it.drill);if(d&&d.equip)d.equip.split(',').forEach(e=>equipSet.add(e.trim()));});
+  const equipList=[...equipSet].filter(Boolean);
+  const rows=planItems.map((it,i)=>{const d=drills.find(x=>x.name===it.drill);return`<tr><td style="padding:8px 6px;border-bottom:1px solid #E2E5EF">${i+1}</td><td style="padding:8px 6px;border-bottom:1px solid #E2E5EF;font-weight:500">${it.drill}</td><td style="padding:8px 6px;border-bottom:1px solid #E2E5EF">${it.time} min</td><td style="padding:8px 6px;border-bottom:1px solid #E2E5EF;color:#6B7494">${d?.cat||'—'}</td><td style="padding:8px 6px;border-bottom:1px solid #E2E5EF;color:#6B7494">${d?.equip||'—'}</td><td style="padding:8px 6px;border-bottom:1px solid #E2E5EF;color:#6B7494">${d?.lvl||'—'}</td></tr>`;}).join('');
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><title>${name}</title><style>body{font-family:Segoe UI,sans-serif;padding:32px;color:#1A1A2E;max-width:800px;margin:0 auto}h1{font-size:24px;margin-bottom:4px;color:#E8650A}h2{font-size:14px;color:#6B7494;margin:20px 0 8px;border-bottom:2px solid #E2E5EF;padding-bottom:5px;text-transform:uppercase}.meta{display:flex;gap:24px;margin:12px 0 20px;font-size:13px;color:#6B7494}.meta span{font-weight:500;color:#1A1A2E}table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;padding:8px 6px;background:#F5F6FA;color:#6B7494;font-weight:500;border-bottom:2px solid #E2E5EF}.chip{display:inline-block;background:#F0F2F8;border:1px solid #E2E5EF;border-radius:12px;padding:2px 10px;font-size:12px;margin:2px}@media print{button{display:none}}</style></head><body>
+  <h1>🏀 ${name}</h1><div class="meta">Time: <span>${time} min</span> &nbsp;·&nbsp; Focus: <span>${cat}</span> &nbsp;·&nbsp; Player/Team: <span>${playerName}</span></div>
+  ${equipList.length?`<h2>Equipment needed</h2><div>${equipList.map(e=>`<span class="chip">🏀 ${e}</span>`).join('')}</div>`:''}
+  <h2>Drills</h2><table><thead><tr><th>#</th><th>Drill</th><th>Time</th><th>Category</th><th>Equipment</th><th>Level</th></tr></thead><tbody>${rows}</tbody></table>
+  <div style="margin-top:32px;font-size:11px;color:#aaa">HoopIQ · ${new Date().toLocaleDateString()}</div>
+  <script>window.onload=()=>window.print()<\/script></body></html>`);w.document.close();
+}
+
+// ==================== SKILL MAP ====================
+function renderSkillMap(){document.getElementById('skill-map').innerHTML=Object.entries(skillMap).map(([cat,skills])=>{const nodes=skills.map((sk,i)=>{const cls=sk.pct>=90?'sn-m':sk.pct>=55?'sn-p':sk.pct>=20?'sn-b':'sn-l';const col=sk.pct>=90?'var(--gr)':sk.pct>=55?'var(--or)':sk.pct>=20?'var(--bl)':'var(--mu)';return`<div class="sn ${cls}" onclick="openEditSkill('${cat}',${i})"><div style="font-size:11px;font-weight:600;margin-bottom:4px">${sk.name}</div><div class="pb" style="margin-top:0"><div class="pf" style="width:${sk.pct}%;background:${col}"></div></div><div style="font-size:10px;color:${col};margin-top:4px;font-weight:500">${sk.pct}%</div></div>`;}).join('');return`<div style="margin-bottom:22px"><div class="sl2" style="margin-top:0;display:flex;align-items:center;gap:8px"><span>${cat}</span><span style="width:10px;height:10px;border-radius:50%;background:${catColor(cat)||'var(--mu)'};display:inline-block"></span></div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px">${nodes}</div></div>`;}).join('');}
+function openEditSkill(cat,idx){const sk=skillMap[cat]?.[idx];if(!sk)return;document.getElementById('esk-cat').value=cat;document.getElementById('esk-idx').value=idx;document.getElementById('esk-name').value=sk.name;document.getElementById('esk-pct').value=sk.pct;openModal('editSkillModal');}
+function updateSkill(){const cat=document.getElementById('esk-cat').value,idx=parseInt(document.getElementById('esk-idx').value);skillMap[cat][idx]={name:document.getElementById('esk-name').value.trim()||skillMap[cat][idx].name,pct:Math.min(100,Math.max(0,parseInt(document.getElementById('esk-pct').value)||0))};closeModal('editSkillModal');renderSkillMap();scheduleSave();}
+function deleteSkill(){const cat=document.getElementById('esk-cat').value,idx=parseInt(document.getElementById('esk-idx').value);if(confirm('Delete this skill?')){skillMap[cat].splice(idx,1);closeModal('editSkillModal');renderSkillMap();scheduleSave();}}
+function saveSkill(){const cat=document.getElementById('sk-cat').value,name=document.getElementById('sk-name').value.trim();if(!name)return alert('Enter skill name.');if(!skillMap[cat])skillMap[cat]=[];skillMap[cat].push({name,pct:Math.min(100,Math.max(0,parseInt(document.getElementById('sk-pct').value)||0))});closeModal('addSkillModal');renderSkillMap();scheduleSave();}
+
+// ==================== PROGRESS ====================
+function renderProgress(){
+  updatePlayerDropdowns();
+  const m=sessions.reduce((a,s)=>a+s.makes,0),a=sessions.reduce((a,s)=>a+s.att,0),pct=a?Math.round(m/a*100):0;
+  const wins=sessions.filter(s=>s.result==='win').length,losses=sessions.filter(s=>s.result==='loss').length;
+  const scored=sessions.filter(s=>s.score&&s.score!=='—'&&s.score!=='');
+  document.getElementById('prog-stats').innerHTML=`
+    <div class="stat"><div class="sl">Total makes</div><div class="sv" style="color:var(--gr)">${m}</div><div class="sc" style="color:var(--mu)">${a} att</div></div>
+    <div class="stat"><div class="sl">Make %</div><div class="sv" style="color:var(--or)">${pct}%</div></div>
+    <div class="stat"><div class="sl">W / L</div><div class="sv"><span style="color:var(--gr)">${wins}</span><span style="color:var(--mu);font-size:18px"> – </span><span style="color:var(--re)">${losses}</span></div><div class="sc" style="color:var(--mu)">${wins+losses} games</div></div>
+    <div class="stat"><div class="sl">Sessions</div><div class="sv" style="color:var(--bl)">${sessions.length}</div></div>`;
+  const cats=categories.map(c=>c.name);
+  const cM={};cats.forEach(c=>cM[c]=0);sessions.forEach(s=>{if(cM[s.cat]!==undefined)cM[s.cat]+=s.makes;});
+  const maxM=Math.max(...Object.values(cM),1);
+  document.getElementById('prog-chart').innerHTML=`<div class="chart-area"><div class="cbar-wrap">${cats.map(c=>`<div style="display:flex;flex-direction:column;flex:1"><div class="cbar" style="height:${Math.round(cM[c]/maxM*100)}%;background:${catColor(c)};opacity:.85" data-tip="${c}: ${cM[c]}"></div><div class="cbar-label">${c.split(' ')[0]}</div></div>`).join('')}</div></div>`;
+  const pcts=sessions.map(s=>s.att?Math.round(s.makes/s.att*100):0).reverse();const maxP=Math.max(...pcts,1);
+  document.getElementById('prog-trend').innerHTML=`<div class="chart-area"><div class="cbar-wrap">${pcts.map((p,i)=>`<div style="display:flex;flex-direction:column;flex:1"><div class="cbar" style="height:${Math.round(p/maxP*100)}%;background:var(--bl);opacity:.8" data-tip="${sessions[sessions.length-1-i]?.name}: ${p}%"></div><div class="cbar-label">${p}%</div></div>`).join('')}</div></div>`;
+  document.getElementById('scores-list').innerHTML=scored.length?scored.slice(0,6).map(s=>{const parts=(s.score||'').split('–');const us=parseInt(parts[0])||0,them=parseInt(parts[1])||0,won=us>them;return`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd)"><span class="badge ${won?'b-gr':'b-re'}" style="min-width:28px;text-align:center">${won?'W':'L'}</span><span style="flex:1;font-size:12px">${s.name}<span style="color:var(--mu);margin-left:6px">${s.player?'· '+s.player:''}</span></span><span style="font-weight:700;font-size:15px;color:${won?'var(--gr)':'var(--re)'}">${us}</span><span style="color:var(--mu);font-size:13px">–</span><span style="font-weight:700;font-size:15px;color:var(--mu)">${them}</span><span style="font-size:11px;color:var(--mu);min-width:60px;text-align:right">${s.date}</span></div>`;}).join(''):`<div style="color:var(--mu);text-align:center;padding:16px;font-size:13px">No scores logged yet.</div>`;
+  document.getElementById('wl-badge').textContent=`${wins}W – ${losses}L`;
+  document.getElementById('sess-log').innerHTML=sessions.map((s,i)=>{const rb=s.result==='win'?`<span class="badge b-gr">Win</span>`:s.result==='loss'?`<span class="badge b-re">Loss</span>`:'';return`<tr style="border-top:1px solid var(--bd);font-size:12px"><td style="padding:10px 4px 10px 0;color:var(--mu)">${s.date}</td><td style="padding:10px 4px">${s.name}</td><td style="padding:10px 4px;color:var(--mu)">${s.player||'—'}</td><td style="padding:10px 4px"><span contenteditable="true" onblur="editSess(${i},'makes',this.textContent)">${s.makes}</span></td><td style="padding:10px 4px"><span contenteditable="true" onblur="editSess(${i},'att',this.textContent)">${s.att}</span></td><td style="padding:10px 4px;font-weight:600;color:var(--or)">${s.att?Math.round(s.makes/s.att*100):0}%</td><td style="padding:10px 4px"><span class="badge b-mu">${s.cat}</span></td><td style="padding:10px 4px">${rb}</td><td style="padding:10px 4px;font-weight:600">${s.score||'—'}</td><td style="padding:10px 4px"><button class="btn-ic" onclick="deleteSess(${i})"><i class="ti ti-trash"></i></button></td></tr>`;}).join('');
+}
+function editSess(i,f,v){const n=parseInt(v);if(!isNaN(n)){sessions[i][f]=n;renderProgress();scheduleSave();}}
+function deleteSess(i){if(confirm('Delete session?')){sessions.splice(i,1);renderProgress();scheduleSave();}}
+function setResultModal(r){document.getElementById('ls-result').value=r;const wb=document.getElementById('ls-win-btn'),lb=document.getElementById('ls-loss-btn'),nb=document.getElementById('ls-none-btn');wb.style.background=r==='win'?'#DCFCE7':'';wb.style.fontWeight=r==='win'?'700':'500';lb.style.background=r==='loss'?'#FEE2E2':'';lb.style.fontWeight=r==='loss'?'700':'500';nb.style.background=!r?'var(--sur2)':'';}
+function logSession(){
+  const name=document.getElementById('ls-name').value.trim();if(!name)return alert('Enter session name.');
+  const pid=parseInt(document.getElementById('ls-player').value)||null;
+  const pname=pid?players.find(x=>x.id===pid)?.name||'':'';
+  const makes=parseInt(document.getElementById('ls-makes').value)||0,att=parseInt(document.getElementById('ls-att').value)||0,cat=document.getElementById('ls-cat').value;
+  const result=document.getElementById('ls-result').value||'';
+  const us=document.getElementById('ls-score-us').value,them=document.getElementById('ls-score-them').value;
+  const score=(us!==''&&them!=='')?`${us}–${them}`:'';
+  const now=new Date(),d=`${now.toLocaleString('default',{month:'short'})} ${now.getDate()}, ${now.getFullYear()}`;
+  const s={date:d,name,player:pname,makes,att,cat,result,score};
+  sessions.unshift(s);
+  if(pid){const p=players.find(x=>x.id===pid);if(p)p.sessions.unshift({date:d,name,makes,att,cat,result,score});}
+  closeModal('addStatModal');['ls-name','ls-makes','ls-att','ls-score-us','ls-score-them'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ls-result').value='';setResultModal('');renderProgress();scheduleSave();
+}
+function downloadProgressPDF(){
+  const m=sessions.reduce((a,s)=>a+s.makes,0),a=sessions.reduce((a,s)=>a+s.att,0);
+  const wins=sessions.filter(s=>s.result==='win').length,losses=sessions.filter(s=>s.result==='loss').length;
+  const rows=sessions.map(s=>`<tr><td>${s.date}</td><td>${s.name}</td><td>${s.player||'—'}</td><td>${s.makes}</td><td>${s.att}</td><td>${s.att?Math.round(s.makes/s.att*100):0}%</td><td>${s.cat}</td><td>${s.result||'—'}</td><td>${s.score||'—'}</td></tr>`).join('');
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><title>HoopIQ Progress Report</title><style>body{font-family:Segoe UI,sans-serif;padding:32px;color:#1A1A2E;max-width:900px;margin:0 auto}h1{font-size:24px;color:#E8650A}h2{font-size:14px;color:#6B7494;margin:20px 0 8px;border-bottom:2px solid #E2E5EF;padding-bottom:5px;text-transform:uppercase}.stats{display:flex;gap:16px;margin:16px 0;flex-wrap:wrap}.sb2{background:#F5F6FA;border-radius:10px;padding:12px 16px;text-align:center;min-width:90px}.sv2{font-size:24px;font-weight:700}.sl3{font-size:11px;color:#6B7494;text-transform:uppercase}table{width:100%;border-collapse:collapse;font-size:12px}th{text-align:left;padding:7px 5px;background:#F5F6FA;color:#6B7494;font-weight:500;border-bottom:2px solid #E2E5EF}td{padding:7px 5px;border-bottom:1px solid #E2E5EF}@media print{button{display:none}}</style></head><body>
+  <h1>📊 HoopIQ Progress Report</h1><div style="color:#6B7494;font-size:13px">Generated ${new Date().toLocaleDateString()}</div>
+  <div class="stats"><div class="sb2"><div class="sv2" style="color:#16A34A">${m}</div><div class="sl3">Makes</div></div><div class="sb2"><div class="sv2" style="color:#E8650A">${a?Math.round(m/a*100):0}%</div><div class="sl3">Make %</div></div><div class="sb2"><div class="sv2" style="color:#2563EB">${sessions.length}</div><div class="sl3">Sessions</div></div><div class="sb2"><div class="sv2" style="color:#16A34A">${wins}</div><div class="sl3">Wins</div></div><div class="sb2"><div class="sv2" style="color:#DC2626">${losses}</div><div class="sl3">Losses</div></div></div>
+  <h2>Session Log</h2><table><thead><tr><th>Date</th><th>Session</th><th>Player</th><th>Makes</th><th>Att</th><th>%</th><th>Category</th><th>Result</th><th>Score</th></tr></thead><tbody>${rows||'<tr><td colspan="9" style="color:#888">No sessions.</td></tr>'}</tbody></table>
+  <div style="margin-top:32px;font-size:11px;color:#aaa">HoopIQ · ${new Date().toLocaleDateString()}</div>
+  <script>window.onload=()=>window.print()<\/script></body></html>`);w.document.close();
+}
+function downloadProgressExcel(){
+  const data=[['Date','Session','Player','Makes','Attempts','Make %','Category','Result','Score']];
+  sessions.forEach(s=>data.push([s.date,s.name,s.player||'',s.makes,s.att,s.att?Math.round(s.makes/s.att*100)+'%':'0%',s.cat,s.result||'',s.score||'']));
+  const wb=XLSX.utils.book_new();const ws=XLSX.utils.aoa_to_sheet(data);ws['!cols']=[{wch:14},{wch:24},{wch:18},{wch:8},{wch:8},{wch:8},{wch:16},{wch:8},{wch:10}];XLSX.utils.book_append_sheet(wb,ws,'Sessions');
+  const sum=[['HoopIQ Progress Summary'],['Generated',new Date().toLocaleDateString()],[''],['Total Makes',sessions.reduce((a,s)=>a+s.makes,0)],['Total Attempts',sessions.reduce((a,s)=>a+s.att,0)],['Overall Make %',(sessions.reduce((a,s)=>a+s.att,0)?Math.round(sessions.reduce((a,s)=>a+s.makes,0)/sessions.reduce((a,s)=>a+s.att,0)*100):0)+'%'],['Sessions',sessions.length],['Wins',sessions.filter(s=>s.result==='win').length],['Losses',sessions.filter(s=>s.result==='loss').length]];
+  const ws2=XLSX.utils.aoa_to_sheet(sum);ws2['!cols']=[{wch:20},{wch:16}];XLSX.utils.book_append_sheet(wb,ws2,'Summary');XLSX.writeFile(wb,'HoopIQ_Progress.xlsx');
+}
+
+// ==================== TIMER ====================
+function recordResult(r){tResult=tResult===r?'':r;const wd=document.getElementById('t-win-btn'),ld=document.getElementById('t-loss-btn'),disp=document.getElementById('t-result-display');wd.style.background=tResult==='win'?'#DCFCE7':'';wd.style.fontWeight=tResult==='win'?'700':'500';ld.style.background=tResult==='loss'?'#FEE2E2':'';ld.style.fontWeight=tResult==='loss'?'700':'500';disp.textContent=tResult==='win'?'✅ Win recorded':tResult==='loss'?'❌ Loss recorded':'Not recorded';disp.style.color=tResult==='win'?'var(--gr)':tResult==='loss'?'var(--re)':'var(--mu)';}
+function dispTimer(){const m=Math.floor(tSec/60),s=tSec%60;document.getElementById('t-display').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');}
+function toggleTimer(){if(tRestRunning)return;tRunning=!tRunning;const btn=document.getElementById('t-btn');if(tRunning){btn.innerHTML='<i class="ti ti-player-pause"></i>Pause';document.getElementById('t-status').textContent='Working…';tInterval=setInterval(()=>{tSec--;dispTimer();if(tSec<=0){clearInterval(tInterval);tRunning=false;btn.innerHTML='<i class="ti ti-player-play"></i>Start';document.getElementById('t-status').textContent='Done — rest!';startRest();tSec=parseInt(document.getElementById('t-work').value)||30;dispTimer();}},1000);}else{clearInterval(tInterval);btn.innerHTML='<i class="ti ti-player-play"></i>Resume';document.getElementById('t-status').textContent='Paused';}}
+function startRest(){const rs=parseInt(document.getElementById('t-rest').value)||0;if(!rs)return;tRestRunning=true;let rc=rs;const rd=document.getElementById('rest-display');tRestInt=setInterval(()=>{rc--;rd.textContent=`Rest: ${rc}s remaining`;if(rc<=0){clearInterval(tRestInt);tRestRunning=false;rd.textContent='Rest complete — go!';document.getElementById('t-status').textContent='Ready';}},1000);}
+function resetTimer(){clearInterval(tInterval);clearInterval(tRestInt);tRunning=false;tRestRunning=false;tSec=parseInt(document.getElementById('t-work').value)||30;dispTimer();document.getElementById('t-btn').innerHTML='<i class="ti ti-player-play"></i>Start';document.getElementById('t-status').textContent='Ready';document.getElementById('rest-display').textContent='Rest timer inactive';}
+function addMake(){tMakes++;tAtt++;updCounts();}
+function addMiss(){tAtt++;updCounts();}
+function addSet(){
+  tSets++;document.getElementById('t-sets').textContent=tSets;
+  const us=document.getElementById('t-score-us').value,them=document.getElementById('t-score-them').value;
+  const score=(us!==''&&them!=='')?`${us}–${them}`:'';
+  const drillName=document.getElementById('t-drill').value;
+  const pid=parseInt(document.getElementById('t-player').value)||null;
+  const pname=pid?players.find(x=>x.id===pid)?.name||'':'';
+  const now=new Date(),d=`${now.toLocaleString('default',{month:'short'})} ${now.getDate()}, ${now.getFullYear()}`;
+  const s={date:d,name:`${drillName} (Set ${tSets})`,player:pname,makes:tMakes,att:tAtt,cat:'Form Shooting',result:tResult,score};
+  sessions.unshift(s);if(pid){const p=players.find(x=>x.id===pid);if(p)p.sessions.unshift({...s});}
+  tMakes=0;tAtt=0;updCounts();resetTimer();scheduleSave();
+}
+function updCounts(){document.getElementById('t-makes').textContent=tMakes;document.getElementById('t-attempts').textContent=tAtt;document.getElementById('t-pct').textContent=tAtt?Math.round(tMakes/tAtt*100)+'%':'—';}
+function addTimerTag(){const v=prompt('Tag name:');if(v){const s=document.createElement('span');s.className='tag tag-bl';s.textContent=v;document.getElementById('t-tags').insertBefore(s,document.getElementById('t-tags').lastElementChild);}}
+
+// ==================== BOOT ====================
+async function boot(){
+  await loadData();
+  populateCatSelects();
+  renderCatList();
+  renderModalTags();
+  updatePlayerDropdowns();
+  renderDash();
+  document.querySelector('.color-opt[data-col="#E8650A"]').style.border='3px solid var(--tx)';
+  document.querySelector('.cat-col-opt[data-col="#E8650A"]').style.border='3px solid var(--tx)';
+  document.getElementById('loading-overlay').style.display='none';
+  // Check if we had previously saved data
+  try {
+    const r = await window.storage.get(STORE_KEY);
+    if(r && r.value) {
+      setSaveStatus('saved');
+      const now=new Date();
+      document.getElementById('last-saved').textContent=`Last saved ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+    } else {
+      setSaveStatus('unsaved','No save found — save to persist data');
+    }
+  } catch(e){ setSaveStatus('unsaved','No save found — save to persist data'); }
+}
+boot();
+</script>
+</body>
+</html>
